@@ -1,0 +1,31 @@
+{
+  "name": "usabilitydynamics/lib-ud-api-client",
+  "description": "UD API Client for WooCommerce API Manager",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/UsabilityDynamics/lib-ud-api-client"
+  },
+  "homepage": "https://github.com/UsabilityDynamics/lib-ud-api-client",
+  "keywords": [
+    "wordpress",
+    "plugins",
+    "api",
+    "client",
+    "licenses"
+  ],
+  "minimum-stability": "dev",
+  "license": "GPLv2",
+  "authors": [
+    {
+      "name": "Maxim Peshkov",
+      "email": "maxim.peshkov@usabilitydynamics.com",
+      "homepage": "http://usabilitydynamics.com"
+    }
+  ],
+  "require": {
+    "php": ">=5.3"
+  },
+  "autoload": {
+    "classmap": [ "lib" ]
+  }
+}
