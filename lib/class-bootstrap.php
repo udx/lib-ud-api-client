@@ -23,7 +23,7 @@ namespace UsabilityDynamics\UD_API {
       /**
        *
        */
-      public $ui;
+      public $admin;
       
       /**
        *
@@ -38,7 +38,7 @@ namespace UsabilityDynamics\UD_API {
         
         if ( is_admin() ) {
           //** Load the admin. */
-          $this->ui = new UI( $args );
+          $this->admin = new Admin( $args );
           //** Get queued plugin updates. */
           add_action( 'init', array( $this, 'load_queued_updates' ), 2 );
         }
@@ -56,9 +56,9 @@ namespace UsabilityDynamics\UD_API {
        * @param string $instance_key The unique ID of the product to be activated.
        * @return  void
        */
-      public function add_product ( $file, $instance_key, $product_id ) {
+      public function add_product ( $file, $instance_key, $product_id, $errors_callback ) {
         if ( $file != '' && !isset( $this->products[ $file ] ) ) { 
-          $this->products[ $file ] = array( 'instance_key' => $instance_key, 'product_id' => $product_id ); 
+          $this->products[ $file ] = array( 'instance_key' => $instance_key, 'product_id' => $product_id, 'errors_callback' => $errors_callback ); 
         }
       }
       
@@ -83,7 +83,8 @@ namespace UsabilityDynamics\UD_API {
         if ( !empty( $_ud_queued_updates[ $this->plugin ] ) && is_array( $_ud_queued_updates[ $this->plugin ] ) ) {
           foreach ( $_ud_queued_updates[ $this->plugin ] as $plugin ) {
             if ( is_object( $plugin ) && ! empty( $plugin->file ) && ! empty( $plugin->instance_key ) && ! empty( $plugin->product_id ) ) {
-              $this->add_product( $plugin->file, $plugin->instance_key, $plugin->product_id );
+              $errors_callback = isset( $plugin->errors_callback ) ? $plugin->errors_callback : false;
+              $this->add_product( $plugin->file, $plugin->instance_key, $plugin->product_id, $plugin->errors_callback );
             }
           }
         }

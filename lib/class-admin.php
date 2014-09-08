@@ -1,24 +1,29 @@
 <?php
 /**
- * Licenses UI
+ * Licenses Admin
  *
  * @namespace UsabilityDynamics
  *
  */
 namespace UsabilityDynamics\UD_API {
 
-  if( !class_exists( 'UsabilityDynamics\UD_API\UI' ) ) {
+  if( !class_exists( 'UsabilityDynamics\UD_API\Admin' ) ) {
 
     /**
      * 
      * @author: peshkov@UD
      */
-    class UI extends Scaffold {
+    class Admin extends Scaffold {
     
       /**
        *
        */
       public static $version = '0.1.0';
+      
+      /**
+       *
+       */
+      private $api_url = 'http://woo.ud-dev.com/';
       
       /**
        * Don't ever change this, as it will mess with the data stored of which products are activated, etc.
@@ -66,9 +71,18 @@ namespace UsabilityDynamics\UD_API {
         $activated_products = $this->get_activated_products();
         if ( 0 < count( $products ) ) {
           foreach ( $products as $k => $v ) {
-            if ( isset( $v['product_id'] ) && isset( $v['file_id'] ) ) {
-              $license_hash = isset( $activated_products[ $k ][2] ) ? $activated_products[ $k ][2] : '';
-              new Update_Checker( $k, $v['product_id'], $v['file_id'], $license_hash );
+            if ( isset( $v['product_id'] ) && isset( $v['instance_key'] ) ) {
+              new Update_Checker( array(
+                'upgrade_url' => $this->api_url,
+                'plugin_name' => $v[ 'product_name' ],
+                'product_id' => $v[ 'product_id' ],
+                'api_key' => ( isset( $activated_products[ $k ][2] ) ? $activated_products[ $k ][2] : '' ),
+                'activation_email' => ( isset( $activated_products[ $k ][3] ) ? $activated_products[ $k ][3] : '' ),
+                'renew_license_url' => trailingslashit( $this->api_url ) . 'my-account',
+                'instance' => $v[ 'instance_key' ],
+                'software_version' => $v[ 'product_version' ],
+                'text_domain' => $this->domain,
+              ), $v[ 'errors_callback' ] );
             }
           }
         }
@@ -111,10 +125,11 @@ namespace UsabilityDynamics\UD_API {
                 $response[$k] = array( 
                   'product_name' => $v['Name'], 
                   'product_version' => $v['Version'], 
-                  'file_id' => $reference_list[$k]['file_id'], 
-                  'product_id' => $reference_list[$k]['product_id'], 
+                  'instance_key' => $reference_list[$k]['instance_key'], 
+                  'product_id' => $reference_list[$k]['product_id'],
                   'product_status' => $status, 
-                  'product_file_path' => $k 
+                  'product_file_path' => $k,
+                  'errors_callback' => isset( $reference_list[$k]['errors_callback'] ) ? $reference_list[$k]['errors_callback'] : false,
                 );
               }
             }
@@ -133,7 +148,10 @@ namespace UsabilityDynamics\UD_API {
       protected function get_product_reference_list () {
         global $_ud_license_updater;
         $response = array();
-        if( isset( $_ud_license_updater[ $this->plugin ] ) && is_callable( $_ud_license_updater[ $this->plugin ], 'get_products' ) ) {
+        if( 
+          isset( $_ud_license_updater[ $this->plugin ] ) 
+          && is_callable( array( $_ud_license_updater[ $this->plugin ], 'get_products' ) ) 
+        ) {
           $response = $_ud_license_updater[ $this->plugin ]->get_products();
         }
         return $response;

@@ -21,6 +21,8 @@ namespace UsabilityDynamics\UD_API {
       private $plugin_file;
       private $instance_key;
       
+      public $errors_callback;
+      
       /**
        * Constructor
        */
@@ -29,6 +31,7 @@ namespace UsabilityDynamics\UD_API {
         $this->referrer = !empty( $schema[ 'referrer' ] ) ? $schema[ 'referrer' ] : false;
         $this->plugin_name = !empty( $schema[ 'plugin_name' ] ) ? $schema[ 'plugin_name' ] : false;
         $this->plugin_file = !empty( $schema[ 'plugin_file' ] ) ? $schema[ 'plugin_file' ] : false;
+        $this->errors_callback = !empty( $schema[ 'errors_callback' ] ) ? $schema[ 'errors_callback' ] : false;
         $this->queue_updates();
       }
       
@@ -54,10 +57,11 @@ namespace UsabilityDynamics\UD_API {
           update_option( $option_key, $this->instance_key );
         }
         
-        $plugin               = new \stdClass();
-        $plugin->file         = $this->plugin_file;
-        $plugin->product_id   = $this->product_id;
-        $plugin->instance_key = $this->instance_key;
+        $plugin                  = new \stdClass();
+        $plugin->file            = plugin_basename( $this->plugin_file );
+        $plugin->product_id      = $this->product_id;
+        $plugin->instance_key    = $this->instance_key;
+        $plugin->errors_callback = $this->errors_callback;
 
         $_ud_queued_updates[ $referrer_key ][] = $plugin;        
         return true;
