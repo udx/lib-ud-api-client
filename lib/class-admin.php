@@ -58,6 +58,8 @@ namespace UsabilityDynamics\UD_API {
         //** Load the updaters. */
         add_action( 'admin_init', array( $this, 'load_updater_instances' ) );
         
+        //** Check Activation Statuses */
+        add_action( 'plugins_loaded', array( $this, 'check_activation_status' ), 11 );
       }
       
       /**
@@ -114,6 +116,7 @@ namespace UsabilityDynamics\UD_API {
         $products = get_plugins();
         if ( is_array( $products ) && ( 0 < count( $products ) ) ) {
           $reference_list = $this->get_product_reference_list();
+          //echo "<pre>"; print_r( $reference_list ); echo "</pre>"; die();
           $activated_products = $this->get_activated_products();
           if ( is_array( $reference_list ) && ( 0 < count( $reference_list ) ) ) {
             foreach ( $products as $k => $v ) {
@@ -147,6 +150,7 @@ namespace UsabilityDynamics\UD_API {
        */
       protected function get_product_reference_list () {
         global $_ud_license_updater;
+        //echo "<pre>"; print_r( $_ud_license_updater ); echo "</pre>"; die();
         $response = array();
         if( 
           isset( $_ud_license_updater[ $this->plugin ] ) 
@@ -155,6 +159,46 @@ namespace UsabilityDynamics\UD_API {
           $response = $_ud_license_updater[ $this->plugin ]->get_products();
         }
         return $response;
+      }
+      
+      /**
+       * Determine, if there are licenses that are not yet activated.
+       * @access  public
+       * @since   0.1.0
+       * @return  void
+       */
+      public function check_activation_status () {
+        $products = $this->get_detected_products();
+        //echo "<pre>"; print_r( $products ); echo "</pre>"; die();
+        $messages = array();
+        if ( 0 < count( $products ) ) {
+          foreach ( $products as $k => $v ) {
+            if ( isset( $v['product_status'] ) && 'inactive' == $v['product_status'] ) {
+              $message = sprintf( __( '%s License is not active. To get started, activate it <a href="%s">here</a>.', $this->domain ), $v['product_name'], 'http://example.com' );
+              if( !empty( $v[ 'errors_callback' ] ) && is_callable( $v[ 'errors_callback' ] ) ) {
+                call_user_func( $v[ 'errors_callback' ], $message );
+              } else {
+                $messages[] = $message;
+              }
+            }
+          }
+        }
+        if( !empty( $messages ) ) {
+          $this->messages = $messages;
+          add_action( 'admin_notices', array( $this, 'admin_notices' ) );
+        }
+      }
+      
+      /**
+       * Admin notices
+       */
+      public function admin_notices() {
+        $messages = $this->messages;
+        if( !empty( $messages ) && is_array( $messages ) ) {
+          foreach( $messages as $message ) {
+            echo '<div class="updated fade"><p>' . $message . '</p></div>';
+          }
+        }
       }
       
     }

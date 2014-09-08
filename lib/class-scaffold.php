@@ -34,6 +34,7 @@ namespace UsabilityDynamics\UD_API {
         //** Setup our plugin's data */
         $this->name = isset( $args[ 'name' ] ) ? trim( $args[ 'name' ] ) : false;
         $this->plugin = sanitize_key( $this->name );
+        $this->domain = isset( $args[ 'domain' ] ) ? trim( $args[ 'domain' ] ) : false;
         $this->args = $args;
       }
       

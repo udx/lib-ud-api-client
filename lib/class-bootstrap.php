@@ -34,16 +34,16 @@ namespace UsabilityDynamics\UD_API {
        *
        */
       public function __construct( $args = array() ) {
+        global $_ud_license_updater;
         parent::__construct( $args );
-        
         if ( is_admin() ) {
           //** Load the admin. */
           $this->admin = new Admin( $args );
           //** Get queued plugin updates. */
-          add_action( 'init', array( $this, 'load_queued_updates' ), 2 );
+          add_action( 'plugins_loaded', array( $this, 'load_queued_updates' ), 10 );
         }
-        
-        //echo "<pre>"; print_r( $this ); echo "</pre>";
+        $_ud_license_updater = !is_array( $_ud_license_updater ) ? array() : $_ud_license_updater;
+        $_ud_license_updater[ $this->plugin ] = $this;
       }
       
       /**
@@ -80,6 +80,7 @@ namespace UsabilityDynamics\UD_API {
        */
       public function load_queued_updates() {
         global $_ud_queued_updates;
+        //echo "<pre>"; print_r( $_ud_queued_updates ); echo "</pre>"; die();
         if ( !empty( $_ud_queued_updates[ $this->plugin ] ) && is_array( $_ud_queued_updates[ $this->plugin ] ) ) {
           foreach ( $_ud_queued_updates[ $this->plugin ] as $plugin ) {
             if ( is_object( $plugin ) && ! empty( $plugin->file ) && ! empty( $plugin->instance_key ) && ! empty( $plugin->product_id ) ) {
