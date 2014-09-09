@@ -39,6 +39,11 @@ namespace UsabilityDynamics\UD_API {
       /**
        *
        */
+      public $ui;
+      
+      /**
+       *
+       */
       private $installed_products = array();
       
       /**
@@ -53,13 +58,165 @@ namespace UsabilityDynamics\UD_API {
         parent::__construct( $args );
         
         //** */
-        $this->api = new API();
+        $this->api = new API( array(
+          'token' => $this->token
+        ) );
+        
+        $this->ui = new UI( array(
+          'screens' => array(
+            'licenses' => __( 'Licenses', $this->domain ),
+          )
+        ) );
+        
+        $path = dirname( dirname( __DIR__ ) );
+        $this->screens_path = trailingslashit( $path . '/static/templates' );
+        $this->assets_url = trailingslashit( plugin_dir_url( $path . '/readme.md' ) . 'static' );
         
         //** Load the updaters. */
         add_action( 'admin_init', array( $this, 'load_updater_instances' ) );
         
         //** Check Activation Statuses */
         add_action( 'plugins_loaded', array( $this, 'check_activation_status' ), 11 );
+        
+        //** Add Licenses page */
+        $menu_hook = is_multisite() ? 'network_admin_menu' : 'admin_menu';
+        add_action( $menu_hook, array( $this, 'register_licenses_screen' ) );
+      }
+      
+      /**
+       * Register the admin screen.
+       *
+       * @access public
+       * @since   0.1.0
+       * @return   void
+       */
+      public function register_licenses_screen () {
+        $args = $this->args;
+        $screen = !empty( $args[ 'screen' ] ) ? $args[ 'screen' ] : false;
+        $this->screen_type = !empty( $screen[ 'parent' ] ) ? 'submenu' : 'menu';
+        $this->icon_url = !empty( $screen[ 'icon_url' ] ) ? $screen[ 'icon_url' ] : '';
+        $this->position = !empty( $screen[ 'position' ] ) ? $screen[ 'position' ] : 66;
+        $this->page_title = !empty( $screen[ 'title' ] ) ? $screen[ 'title' ] : __( 'Licenses', $this->domain );
+        $this->menu_slug = $this->plugin . '_' . sanitize_key( $this->page_title );
+        
+        switch( $this->screen_type ) {
+          case 'menu':
+            $this->hook = add_menu_page( $this->page_title, $this->page_title, 'manage_options', $this->menu_slug, array( $this, 'settings_screen' ), $this->icon_url, $this->position );
+            break;
+          case 'submenu':
+            $this->hook = add_submenu_page( $screen[ 'parent' ], $this->page_title, $this->page_title, 'manage_options', $this->menu_slug, array( $this, 'settings_screen' ) );
+            break;
+        }
+        
+        add_action( 'load-' . $this->hook, array( $this, 'process_request' ) );
+        add_action( 'admin_print_styles-' . $this->hook, array( $this, 'enqueue_styles' ) );
+        add_action( 'admin_print_scripts-' . $this->hook, array( $this, 'enqueue_scripts' ) );
+      }
+      
+      /**
+       * Load the main management screen.
+       *
+       * @access public
+       * @since   0.1.0
+       * @return   void
+       */
+      public function settings_screen () {
+        
+        $this->ui->get_header();
+
+        $screen = $this->ui->get_current_screen();
+        
+        switch ( $screen ) {
+          //** Licenses screen. */
+          case 'license':
+          default:
+            $this->installed_products = $this->get_detected_products();
+            $this->pending_products = $this->get_pending_products();
+            //$this->ensure_keys_are_actually_active();
+            require_once( $this->screens_path . 'screen-manage.php' );
+          break;
+        }
+
+        $this->ui->get_footer();
+      }
+      
+      /**
+       * Process the action for the admin screen.
+       * @since  0.1.0
+       * @return  void
+       */
+      public function process_request () {
+        
+      }
+      
+      /**
+       * Enqueue admin styles.
+       * @access  public
+       * @since   0.1.0
+       * @return  void
+       */
+      public function enqueue_styles () {
+        wp_enqueue_style( 'lib-ud-api-client-admin', esc_url( $this->assets_url . 'css/admin.css' ), array(), '0.1.0', 'all' );
+      }
+      
+      /**
+       * Enqueue admin scripts.
+       *
+       * @access  public
+       * @since   0.1.0
+       * @return  void
+       */
+      public function enqueue_scripts () {
+        wp_enqueue_script( 'post' );
+      }
+      
+      /**
+       * Run checks against the API to ensure the product keys are actually active on UsabilityDynamics. If not, deactivate them locally as well.
+       *
+       * @access public
+       * @since  0.1.0
+       * @return void
+       */
+      public function ensure_keys_are_actually_active () {
+        $products = (array)$this->get_activated_products();
+        if ( 0 < count( $products ) ) {
+          foreach ( $products as $k => $v ) {
+            $status = $this->api->product_active_status_check( $k, $v[0], $v[1], $v[2] );
+            if ( false == $status ) {
+              $this->deactivate_product( $k, true );
+            }
+          }
+        }
+      }
+      
+      /**
+       * Deactivate a given product key.
+       *
+       * @since    0.1.0
+       * @param    string $filename File name of the to deactivate plugin licence
+       * @param    bool $local_only Deactivate the product locally without pinging UsabilityDynamics.
+       * @return   boolean          Whether or not the deactivation was successful.
+       */
+      protected function deactivate_product ( $filename, $local_only = false ) {
+        $response = false;
+        $already_active = $this->get_activated_products();
+
+        if ( 0 < count( $already_active ) ) {
+          $deactivated = true;
+          if ( isset( $already_active[ $filename ][0] ) ) {
+            $key = $already_active[ $filename ][2];
+            if ( false == $local_only ) {
+              $deactivated = $this->api->deactivate( $key );
+            }
+          }
+          if ( $deactivated ) {
+            unset( $already_active[ $filename ] );
+            $response = update_option( $this->token . '-activated', $already_active );
+          } else {
+            $this->api->store_error_log();
+          }
+        }
+        return $response;
       }
       
       /**
@@ -162,6 +319,30 @@ namespace UsabilityDynamics\UD_API {
       }
       
       /**
+       * Get an array of products that haven't yet been activated.
+       *
+       * @access public
+       * @since   0.1.0
+       * @return  array Products awaiting activation.
+       */
+      protected function get_pending_products () {
+        $response = array();
+        $products = $this->installed_products;
+        if ( is_array( $products ) && ( 0 < count( $products ) ) ) {
+          $activated_products = $this->get_activated_products();
+          if ( is_array( $activated_products ) && ( 0 <= count( $activated_products ) ) ) {
+            foreach ( $products as $k => $v ) {
+              if ( !in_array( $k, array_keys( $activated_products ) ) ) {
+                $response[$k] = array( 'product_name' => $v['product_name'] );
+              }
+            }
+          }
+        }
+        //echo "<pre>"; print_r( $response ); echo "</pre>"; die();
+        return $response;
+      }
+      
+      /**
        * Determine, if there are licenses that are not yet activated.
        * @access  public
        * @since   0.1.0
@@ -196,7 +377,7 @@ namespace UsabilityDynamics\UD_API {
         $messages = $this->messages;
         if( !empty( $messages ) && is_array( $messages ) ) {
           foreach( $messages as $message ) {
-            echo '<div class="updated fade"><p>' . $message . '</p></div>';
+            echo '<div class="error fade"><p>' . $message . '</p></div>';
           }
         }
       }

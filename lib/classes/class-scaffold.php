@@ -15,7 +15,11 @@ namespace UsabilityDynamics\UD_API {
      * @author: peshkov@UD
      */
     abstract class Scaffold {
-            
+      
+      public $name;
+      public $plugin;
+      public $domain;
+         
       /**
        * Storage for dynamic properties
        * Used by magic __set, __get
