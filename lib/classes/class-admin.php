@@ -85,7 +85,7 @@ namespace UsabilityDynamics\UD_API {
         
         //** Add Licenses page */
         $menu_hook = is_multisite() ? 'network_admin_menu' : 'admin_menu';
-        add_action( $menu_hook, array( $this, 'register_licenses_screen' ) );
+        add_action( $menu_hook, array( $this, 'register_licenses_screen' ), 100 );
       }
       
       /**
