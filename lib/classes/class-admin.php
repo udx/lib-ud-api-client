@@ -23,7 +23,7 @@ namespace UsabilityDynamics\UD_API {
       /**
        *
        */
-      private $api_url = 'http://woo.ud-dev.com/';
+      private $api_url;
       
       /**
        * Don't ever change this, as it will mess with the data stored of which products are activated, etc.
@@ -56,6 +56,9 @@ namespace UsabilityDynamics\UD_API {
        */
       public function __construct( $args = array() ) {
         parent::__construct( $args );
+        
+        //** Set UD API URL. Can be defined custom one in wp-config.php */
+        $this->api_url = defined( 'UD_API_URL' ) ? trailingslashit( UD_API_URL ) : 'http://usabilitydynamics.com/';
         
         //** Don't ever change this, as it will mess with the data stored of which products are activated, etc. */
         $this->token = 'udl_' . $this->plugin;
