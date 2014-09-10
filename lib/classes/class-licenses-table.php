@@ -98,7 +98,7 @@ namespace UsabilityDynamics\UD_API {
         $columns = array(
           'product_name' => __( 'Product', $this->domain ),
           'product_version' => __( 'Version', $this->domain ),
-          'product_status' => __( 'License Key', $this->domain ),
+          'product_status' => __( 'Activation Status', $this->domain ),
         );
         return $columns;
       }
@@ -137,7 +137,10 @@ namespace UsabilityDynamics\UD_API {
           $deactivate_url = wp_nonce_url( add_query_arg( 'action', 'deactivate-product', add_query_arg( 'filepath', $item['product_file_path'], add_query_arg( 'page', $this->page, network_admin_url( 'index.php' ) ) ) ), 'bulk-licenses' );
           $response = '<a href="' . esc_url( $deactivate_url ) . '">' . __( 'Deactivate', $this->domain ) . '</a>' . "\n";
         } else {
-          $response .= '<input name="license_keys[' . esc_attr( $item['product_file_path'] ) . ']" id="license_keys-' . esc_attr( $item['product_file_path'] ) . '" type="text" value="" size="37" aria-required="true" placeholder="' . esc_attr( sprintf( __( 'Place %s license key here', $this->domain ), $item['product_name'] ) ) . '" />' . "\n";
+          $response .= '<ul>' . "\n";
+          $response .= '<li><input name="products[' . esc_attr( $item['product_file_path'] ) . '][license_key]" id="license_key-' . esc_attr( $item['product_file_path'] ) . '" type="text" value="" size="37" aria-required="true" placeholder="' . esc_attr( __( 'Place License Key here', $this->domain ) ) . '" /><li>' . "\n";
+          $response .= '<li><input name="products[' . esc_attr( $item['product_file_path'] ) . '][activation_email]" id="activation_email-' . esc_attr( $item['product_file_path'] ) . '" type="text" value="" size="37" aria-required="true" placeholder="' . esc_attr( __( 'Place Activation Email here', $this->domain ) ) . '" /></li>' . "\n";
+          $response .= '</ul>' . "\n";
         }
         return $response;
       }

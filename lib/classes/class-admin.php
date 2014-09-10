@@ -58,9 +58,7 @@ namespace UsabilityDynamics\UD_API {
         parent::__construct( $args );
         
         //** */
-        $this->api = new API( array(
-          'token' => $this->token
-        ) );
+        $this->api = new API( $this->api_url, $this->token );
         
         $this->ui = new UI( array(
           'screens' => array(
@@ -111,6 +109,9 @@ namespace UsabilityDynamics\UD_API {
         add_action( 'load-' . $this->hook, array( $this, 'process_request' ) );
         add_action( 'admin_print_styles-' . $this->hook, array( $this, 'enqueue_styles' ) );
         add_action( 'admin_print_scripts-' . $this->hook, array( $this, 'enqueue_scripts' ) );
+        
+        $notices_hook = is_multisite() ? 'network_admin_notices' : 'admin_notices';
+        add_action( $notices_hook, array( $this, 'admin_notices' ) );
       }
       
       /**
@@ -147,6 +148,51 @@ namespace UsabilityDynamics\UD_API {
        */
       public function process_request () {
         
+        $supported_actions = array( 'activate-products', 'deactivate-product' );
+        if ( !isset( $_REQUEST['action'] ) || !in_array( $_REQUEST['action'], $supported_actions ) || !check_admin_referer( 'bulk-' . 'licenses' ) ) {
+          return null;
+        }
+        
+        $response = false;
+        $status = 'false';
+        $type = $_REQUEST['action'];
+
+        switch ( $type ) {
+          case 'activate-products':
+            $products = array();
+            if ( isset( $_POST[ 'products' ] ) && 0 < count( $_POST[ 'products' ] ) ) {
+              foreach ( $_POST[ 'products' ] as $k => $v ) {
+                if ( '' != $v ) {
+                  $products[$k] = $v;
+                }
+              }
+            }
+            if ( false && 0 < count( $products ) ) {
+              echo "<pre>"; print_r( $products ); echo "</pre>"; die();
+              $response = $this->activate_products( $products );
+            } else {
+              $response = false;
+              $type = 'no-license-keys';
+            }
+          break;
+
+          case 'deactivate-product':
+            if ( isset( $_GET['filepath'] ) && ( '' != $_GET['filepath'] ) ) {
+              $response = $this->deactivate_product( $_GET['filepath'] );
+            }
+          break;
+
+          default:
+          break;
+        }
+
+        if ( $response == true ) {
+          $status = 'true';
+        }
+        
+        $redirect_url = \UsabilityDynamics\Utility::current_url( array( 'type' => urlencode( $type ), 'status' => urlencode( $status ) ) );
+        wp_safe_redirect( $redirect_url );
+        exit;
       }
       
       /**
@@ -366,7 +412,6 @@ namespace UsabilityDynamics\UD_API {
         }
         if( !empty( $messages ) ) {
           $this->messages = $messages;
-          add_action( 'admin_notices', array( $this, 'admin_notices' ) );
         }
       }
       
@@ -374,12 +419,71 @@ namespace UsabilityDynamics\UD_API {
        * Admin notices
        */
       public function admin_notices() {
+        
+        //** Step 1. Look for default messages */
         $messages = $this->messages;
         if( !empty( $messages ) && is_array( $messages ) ) {
           foreach( $messages as $message ) {
             echo '<div class="error fade"><p>' . $message . '</p></div>';
           }
         }
+        
+        //** Step 2. Look for status messages */
+        $message = '';
+        $response = '';
+
+        if ( isset( $_GET['status'] ) && in_array( $_GET['status'], array( 'true', 'false' ) ) && isset( $_GET['type'] ) ) {
+          $classes = array( 'true' => 'updated', 'false' => 'error' );
+          $request_errors = $this->api->get_error_log();
+
+          switch ( $_GET['type'] ) {
+            case 'no-license-keys':
+              $message = __( 'No license keys were specified for activation.', 'woothemes-updater' );
+            break;
+
+            case 'deactivate-product':
+              if ( 'true' == $_GET['status'] && ( 0 >= count( $request_errors ) ) ) {
+                $message = __( 'Product deactivated successfully.', 'woothemes-updater' );
+              } else {
+                $message = __( 'There was an error while deactivating the product.', 'woothemes-updater' );
+              }
+            break;
+
+            default:
+
+              if ( 'true' == $_GET['status'] && ( 0 >= count( $request_errors ) ) ) {
+                $message = __( 'Products activated successfully.', 'woothemes-updater' );
+              } else {
+                $message = __( 'There was an error and not all products were activated.', 'woothemes-updater' );
+              }
+            break;
+          }
+
+          $response = '<div class="' . esc_attr( $classes[$_GET['status']] ) . ' fade">' . "\n";
+          $response .= wpautop( $message );
+          $response .= '</div>' . "\n";
+
+          // Cater for API request error logs.
+          if ( is_array( $request_errors ) && ( 0 < count( $request_errors ) ) ) {
+            $message = '';
+
+            foreach ( $request_errors as $k => $v ) {
+              $message .= wpautop( $v );
+            }
+
+            $response .= '<div class="error fade">' . "\n";
+            $response .= make_clickable( $message );
+            $response .= '</div>' . "\n";
+
+            // Clear the error log.
+            $this->api->clear_error_log();
+          }
+
+          if ( '' != $response ) {
+            echo $response;
+          }
+        }        
+        
       }
       
     }

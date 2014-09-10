@@ -23,8 +23,14 @@ namespace UsabilityDynamics\UD_API {
       /**
        * 
        */
-      public function __construct( $api_url ) {
+      protected $token;
+      
+      /**
+       * 
+       */
+      public function __construct( $api_url, $token ) {
         $this->api_url = $api_url;
+        $this->token = $token;
       }
 
       /**
@@ -86,12 +92,36 @@ namespace UsabilityDynamics\UD_API {
       protected function request( $args ) {
         $target_url = $this->create_software_api_url( $args );
         $request = wp_remote_get( $target_url );
-        if( is_wp_error( $request ) || wp_remote_retrieve_response_code( $request ) != 200 ) {
-          //** Request failed */
+        if( is_wp_error( $request ) ) {
           return false;
+        } elseif( wp_remote_retrieve_response_code( $request ) != 200 ) {
+          
+        } else {
+          $response = wp_remote_retrieve_body( $request );
+          echo "<pre>"; print_r( $response ); echo "</pre>"; die();
+          return $response;
         }
-        $response = wp_remote_retrieve_body( $request );
-        return $response;
+        return false;
+      }
+      
+      /**
+       * Get the current error log.
+       *
+       * @since  0.1.0
+       * @return  void
+       */
+      public function get_error_log () {
+        return get_transient( $this->token . '-request-error' );
+      }
+      
+      /**
+       * Clear the current error log.
+       *
+       * @since  0.1.0
+       * @return  void
+       */
+      public function clear_error_log () {
+        return delete_transient( $this->token . '-request-error' );
       }
     
     }
