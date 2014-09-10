@@ -315,6 +315,10 @@ namespace UsabilityDynamics\UD_API {
        * @return   void
        */
       protected function get_detected_products () {
+        //** Check if get_plugins() function exists */
+        if ( ! function_exists( 'get_plugins' ) ) {
+          require_once ABSPATH . 'wp-admin/includes/plugin.php';
+        }
         $response = array();
         $products = get_plugins();
         if ( is_array( $products ) && ( 0 < count( $products ) ) ) {
