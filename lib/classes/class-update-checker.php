@@ -120,7 +120,7 @@ namespace UsabilityDynamics\UD_API {
          * but their activation still uses the original scheme.
          * To send only the host, use a line like the one below:
          */
-        $this->blog = isset( $args[ 'domain' ] ) ? str_ireplace( array( 'http://', 'https://' ), '', home_url() ) : false;
+        $this->blog = str_ireplace( array( 'http://', 'https://' ), '', home_url() );
         
         $this->errors_callback = $errors_callback;
         
@@ -159,7 +159,7 @@ namespace UsabilityDynamics\UD_API {
        * Check for updates against the remote server.
        *
        * @access public
-       * @since  1.0.0
+       * @since  0.1.0
        * @param  object $transient
        * @return object $transient
        */

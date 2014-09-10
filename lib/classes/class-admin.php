@@ -29,7 +29,7 @@ namespace UsabilityDynamics\UD_API {
        * Don't ever change this, as it will mess with the data stored of which products are activated, etc.
        *
        */
-      private $token = 'ud-license-manager';
+      private $token;
       
       /**
        *
@@ -57,9 +57,16 @@ namespace UsabilityDynamics\UD_API {
       public function __construct( $args = array() ) {
         parent::__construct( $args );
         
-        //** */
-        $this->api = new API( $this->api_url, $this->token );
+        //** Don't ever change this, as it will mess with the data stored of which products are activated, etc. */
+        $this->token = 'udl_' . $this->plugin;
         
+        //** API */
+        $this->api = new API( array_merge( $args, array(
+          'api_url' => $this->api_url,
+          'token' => $this->token,
+        ) ) );
+        
+        //** UI */
         $this->ui = new UI( array(
           'screens' => array(
             'licenses' => __( 'Licenses', $this->domain ),
@@ -147,7 +154,6 @@ namespace UsabilityDynamics\UD_API {
        * @return  void
        */
       public function process_request () {
-        
         $supported_actions = array( 'activate-products', 'deactivate-product' );
         if ( !isset( $_REQUEST['action'] ) || !in_array( $_REQUEST['action'], $supported_actions ) || !check_admin_referer( 'bulk-' . 'licenses' ) ) {
           return null;
@@ -162,13 +168,13 @@ namespace UsabilityDynamics\UD_API {
             $products = array();
             if ( isset( $_POST[ 'products' ] ) && 0 < count( $_POST[ 'products' ] ) ) {
               foreach ( $_POST[ 'products' ] as $k => $v ) {
-                if ( '' != $v ) {
+                if ( !empty( $v[ 'license_key' ] ) && !empty( $v[ 'activation_email' ] ) ) {
                   $products[$k] = $v;
                 }
               }
             }
-            if ( false && 0 < count( $products ) ) {
-              echo "<pre>"; print_r( $products ); echo "</pre>"; die();
+            if ( 0 < count( $products ) ) {
+              //echo "<pre>"; print_r( $products ); echo "</pre>"; die();
               $response = $this->activate_products( $products );
             } else {
               $response = false;
@@ -190,7 +196,7 @@ namespace UsabilityDynamics\UD_API {
           $status = 'true';
         }
         
-        $redirect_url = \UsabilityDynamics\Utility::current_url( array( 'type' => urlencode( $type ), 'status' => urlencode( $status ) ) );
+        $redirect_url = \UsabilityDynamics\Utility::current_url( array( 'type' => urlencode( $type ), 'status' => urlencode( $status ) ), array( 'action', 'filepath', '_wpnonce' ) );
         wp_safe_redirect( $redirect_url );
         exit;
       }
@@ -236,6 +242,58 @@ namespace UsabilityDynamics\UD_API {
       }
       
       /**
+       * Activate a given array of products.
+       *
+       * @since    1.0.0
+       * @param    array   $products  Array of products ( filepath => key )
+       * @return boolean
+       */
+      protected function activate_products ( $products ) {
+        $response = true;
+        $errors = false;
+        //** Get out if we have incorrect data. */
+        if ( !is_array( $products ) || ( 0 >= count( $products ) ) ) { 
+          return false; 
+        }
+        $key = $this->token . '-activated';
+        $has_update = false;
+        $already_active = $this->get_activated_products();
+        $product_keys = $this->get_detected_products();
+        foreach ( $products as $k => $v ) {
+          //echo "<pre>"; print_r( $product_keys[ $k ] ); echo "</pre>"; die();
+          if( empty( $product_keys[ $k ] ) ) {
+            continue;
+          }
+          //** Perform API "activation" request. */
+          $activate = $this->api->activate( array(
+            'product_id'        => $product_keys[ $k ][ 'product_id' ],
+            'instance'          => $product_keys[ $k ][ 'instance_key' ],
+            'software_version'  => $product_keys[ $k ][ 'product_version' ],
+            'licence_key'       => $v[ 'license_key' ],
+            'email'             => $v[ 'activation_email' ],
+          ), $product_keys[ $k ] );
+          if ( false !== $activate ) {
+            // key: base file, 0: product id, 1: instance_key, 2: hashed license and mail.
+            $hash = base64_encode( $v[ 'license_key' ] . '::' . $v[ 'activation_email' ] );
+            $already_active[$k] = array( $product_keys[$k]['product_id'], $product_keys[$k]['instance_key'], $hash );
+            $has_update = true;
+          } else {
+            $errors = true;
+          }
+        }
+
+        //** Store the error log. */
+        $this->api->store_error_log();
+
+        if ( $has_update && !update_option( $key, $already_active ) ) {
+          $response = false;
+        } elseif( $errors ) {
+          $response = false;
+        }
+        return $response;
+      }
+      
+      /**
        * Deactivate a given product key.
        *
        * @since    0.1.0
@@ -246,14 +304,23 @@ namespace UsabilityDynamics\UD_API {
       protected function deactivate_product ( $filename, $local_only = false ) {
         $response = false;
         $already_active = $this->get_activated_products();
-
+        $products = $this->get_detected_products();
         if ( 0 < count( $already_active ) ) {
           $deactivated = true;
-          if ( isset( $already_active[ $filename ][0] ) ) {
-            $key = $already_active[ $filename ][2];
-            if ( false == $local_only ) {
-              $deactivated = $this->api->deactivate( $key );
-            }
+          if ( !empty( $products[ $filename ] ) && !empty( $already_active[ $filename ][2] ) && false == $local_only ) {
+            //** Get license and activation email  */
+            $data = base64_decode( $already_active[ $filename ][2] );
+            $data = explode( '::', $data );
+            $license_key = isset( $data[0] ) ? $data[0] : '';
+            $activation_email = isset( $data[1] ) ? $data[1] : '';
+            //** Do request */
+            $deactivated = $this->api->deactivate( array(
+              'product_id' 	=> $already_active[ $filename ][0],
+              'instance' 		=> $already_active[ $filename ][1],
+              'email'       => $activation_email,
+              'licence_key' => $license_key,
+            ), $products[ $filename ] );
+            $deactivated = ( false !== $deactivated ) ? true : false;
           }
           if ( $deactivated ) {
             unset( $already_active[ $filename ] );
@@ -277,12 +344,21 @@ namespace UsabilityDynamics\UD_API {
         if ( 0 < count( $products ) ) {
           foreach ( $products as $k => $v ) {
             if ( isset( $v['product_id'] ) && isset( $v['instance_key'] ) ) {
+              //** Maybe Get license and activation email  */
+              $api_key = '';
+              $activation_email = '';
+              if( !empty( $activated_products[ $k ][2] ) ) {
+                $data = base64_decode( $activated_products[ $k ][2] );
+                $data = explode( '::', $data );
+                $api_key = isset( $data[0] ) ? $data[0] : '';
+                $activation_email = isset( $data[1] ) ? $data[1] : '';
+              }
               new Update_Checker( array(
                 'upgrade_url' => $this->api_url,
                 'plugin_name' => $v[ 'product_name' ],
                 'product_id' => $v[ 'product_id' ],
-                'api_key' => ( isset( $activated_products[ $k ][2] ) ? $activated_products[ $k ][2] : '' ),
-                'activation_email' => ( isset( $activated_products[ $k ][3] ) ? $activated_products[ $k ][3] : '' ),
+                'api_key' => $api_key,
+                'activation_email' => $activation_email,
                 'renew_license_url' => trailingslashit( $this->api_url ) . 'my-account',
                 'instance' => $v[ 'instance_key' ],
                 'software_version' => $v[ 'product_version' ],
@@ -440,25 +516,26 @@ namespace UsabilityDynamics\UD_API {
           $classes = array( 'true' => 'updated', 'false' => 'error' );
           $request_errors = $this->api->get_error_log();
 
+          //echo "<pre>"; var_dump( $request_errors ); echo "</pre>"; die();
+          
           switch ( $_GET['type'] ) {
             case 'no-license-keys':
-              $message = __( 'No license keys were specified for activation.', 'woothemes-updater' );
+              $message = __( 'No license keys were specified for activation.', $this->domain );
             break;
 
             case 'deactivate-product':
-              if ( 'true' == $_GET['status'] && ( 0 >= count( $request_errors ) ) ) {
-                $message = __( 'Product deactivated successfully.', 'woothemes-updater' );
+              if ( 'true' == $_GET['status'] && empty( $request_errors ) ) {
+                $message = __( 'Product deactivated successfully.', $this->domain );
               } else {
-                $message = __( 'There was an error while deactivating the product.', 'woothemes-updater' );
+                $message = __( 'There was an error while deactivating the product.', $this->domain );
               }
             break;
 
             default:
-
-              if ( 'true' == $_GET['status'] && ( 0 >= count( $request_errors ) ) ) {
-                $message = __( 'Products activated successfully.', 'woothemes-updater' );
+              if ( 'true' == $_GET['status'] && empty( $request_errors ) ) {
+                $message = __( 'Products activated successfully.', $this->domain );
               } else {
-                $message = __( 'There was an error and not all products were activated.', 'woothemes-updater' );
+                $message = __( 'There was an error and not all products were activated.', $this->domain );
               }
             break;
           }

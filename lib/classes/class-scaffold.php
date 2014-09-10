@@ -16,6 +16,7 @@ namespace UsabilityDynamics\UD_API {
      */
     abstract class Scaffold {
       
+      public $blog;
       public $name;
       public $plugin;
       public $domain;
@@ -39,6 +40,18 @@ namespace UsabilityDynamics\UD_API {
         $this->name = isset( $args[ 'name' ] ) ? trim( $args[ 'name' ] ) : false;
         $this->plugin = sanitize_key( $this->name );
         $this->domain = isset( $args[ 'domain' ] ) ? trim( $args[ 'domain' ] ) : false;
+        
+        /**
+         * Some web hosts have security policies that block the : (colon) and // (slashes) in http://,
+         * so only the host portion of the URL can be sent. For example the host portion might be
+         * www.example.com or example.com. http://www.example.com includes the scheme http,
+         * and the host www.example.com.
+         * Sending only the host also eliminates issues when a client site changes from http to https,
+         * but their activation still uses the original scheme.
+         * To send only the host, use a line like the one below:
+         */
+        $this->blog = str_ireplace( array( 'http://', 'https://' ), '', home_url() );
+        
         $this->args = $args;
       }
       

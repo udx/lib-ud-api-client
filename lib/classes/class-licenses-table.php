@@ -58,7 +58,7 @@ namespace UsabilityDynamics\UD_API {
        * @return  void
        */
       public function no_items () {
-          echo wpautop( sprintf( __( 'No %s Plugins found.', $this->domain ), $this->name ) );
+          echo wpautop( sprintf( __( 'No active %s plugins found.', $this->domain ), $this->name ) );
       }
 
       /**
@@ -134,7 +134,11 @@ namespace UsabilityDynamics\UD_API {
       public function column_product_status ( $item ) {
         $response = '';
         if ( 'active' == $item['product_status'] ) {
-          $deactivate_url = wp_nonce_url( add_query_arg( 'action', 'deactivate-product', add_query_arg( 'filepath', $item['product_file_path'], add_query_arg( 'page', $this->page, network_admin_url( 'index.php' ) ) ) ), 'bulk-licenses' );
+          $deactivate_url = wp_nonce_url(\UsabilityDynamics\Utility::current_url( array(
+            'action' => 'deactivate-product',
+            'filepath' => urlencode( $item['product_file_path'] ),
+          ) ), 'bulk-licenses' );
+          //$deactivate_url = wp_nonce_url( add_query_arg( 'action', 'deactivate-product', add_query_arg( 'filepath', $item['product_file_path'], add_query_arg( 'page', $this->page, network_admin_url( 'index.php' ) ) ) ), 'bulk-licenses' );
           $response = '<a href="' . esc_url( $deactivate_url ) . '">' . __( 'Deactivate', $this->domain ) . '</a>' . "\n";
         } else {
           $response .= '<ul>' . "\n";
