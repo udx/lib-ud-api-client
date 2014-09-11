@@ -70,11 +70,12 @@ namespace UsabilityDynamics\UD_API {
         ) ) );
         
         //** UI */
-        $this->ui = new UI( array(
+        $this->ui = new UI( array_merge( $args, array(
+          'token' => $this->token,
           'screens' => array(
             'licenses' => __( 'Licenses', $this->domain ),
           )
-        ) );
+        ) ) );
         
         $path = dirname( dirname( __DIR__ ) );
         $this->screens_path = trailingslashit( $path . '/static/templates' );
@@ -89,6 +90,10 @@ namespace UsabilityDynamics\UD_API {
         //** Add Licenses page */
         $menu_hook = is_multisite() ? 'network_admin_menu' : 'admin_menu';
         add_action( $menu_hook, array( $this, 'register_licenses_screen' ), 100 );
+        
+        //** Admin Notices Filter */
+        add_filter( 'ud:errors:admin_notices', array( $this, 'maybe_remove_notices' ) );
+        add_filter( 'ud:messages:admin_notices', array( $this, 'maybe_remove_notices' ) );
       }
       
       /**
@@ -107,14 +112,27 @@ namespace UsabilityDynamics\UD_API {
         $this->page_title = !empty( $screen[ 'title' ] ) ? $screen[ 'title' ] : __( 'Licenses', $this->domain );
         $this->menu_slug = $this->plugin . '_' . sanitize_key( $this->page_title );
         
+        $licenses_link = '';
         switch( $this->screen_type ) {
           case 'menu':
+            global $menu;
             $this->hook = add_menu_page( $this->page_title, $this->page_title, 'manage_options', $this->menu_slug, array( $this, 'settings_screen' ), $this->icon_url, $this->position );
             break;
           case 'submenu':
+            global $submenu;
             $this->hook = add_submenu_page( $screen[ 'parent' ], $this->page_title, $this->page_title, 'manage_options', $this->menu_slug, array( $this, 'settings_screen' ) );
+            foreach( $submenu[ $screen[ 'parent' ] ] as $sm ) {
+              if( $sm[2] == $this->menu_slug ) {
+                $licenses_link = add_query_arg( array(
+                  'page' => $this->menu_slug,
+                ), network_admin_url( $screen[ 'parent' ] ) );
+              }
+            }
             break;
         }
+        
+        //** Set url for licenses page */
+        update_option( $this->token . '-url', $licenses_link );
         
         add_action( 'load-' . $this->hook, array( $this, 'process_request' ) );
         add_action( 'admin_print_styles-' . $this->hook, array( $this, 'enqueue_styles' ) );
@@ -141,9 +159,9 @@ namespace UsabilityDynamics\UD_API {
           //** Licenses screen. */
           case 'license':
           default:
+            $this->ensure_keys_are_actually_active();
             $this->installed_products = $this->get_detected_products();
             $this->pending_products = $this->get_pending_products();
-            //$this->ensure_keys_are_actually_active();
             require_once( $this->screens_path . 'screen-manage.php' );
           break;
         }
@@ -233,11 +251,29 @@ namespace UsabilityDynamics\UD_API {
        * @return void
        */
       public function ensure_keys_are_actually_active () {
-        $products = (array)$this->get_activated_products();
-        if ( 0 < count( $products ) ) {
-          foreach ( $products as $k => $v ) {
-            $status = $this->api->product_active_status_check( $k, $v[0], $v[1], $v[2] );
-            if ( false == $status ) {
+        $already_active = (array)$this->get_activated_products();
+        $products = $this->get_detected_products();
+        if ( 0 < count( $already_active ) ) {
+          foreach ( $already_active as $k => $v ) {
+            $deactivate = true;
+            if ( !empty( $already_active[ $k ][2] ) ) {
+              //** Get license and activation email  */
+              $data = base64_decode( $already_active[ $k ][2] );
+              $data = explode( '::', $data );
+              $license_key = isset( $data[0] ) ? $data[0] : '';
+              $activation_email = isset( $data[1] ) ? $data[1] : '';
+              //** Do request */
+              $response = $this->api->status( array(
+                'product_id' 	=> $already_active[ $k ][0],
+                'instance' 		=> $already_active[ $k ][1],
+                'email'       => $activation_email,
+                'licence_key' => $license_key,
+              ), false, false );
+              if( is_array( $response ) && !empty( $response[ 'status_check' ] ) && $response[ 'status_check' ] == 'active' ) {
+                $deactivate = false;
+              }
+            }
+            if( $deactivate ) {
               $this->deactivate_product( $k, true );
             }
           }
@@ -336,7 +372,7 @@ namespace UsabilityDynamics\UD_API {
       }
       
       /**
-       * Load an instance of the updater class for each activated WooThemes Product.
+       * Load an instance of the updater class for each activated UsabilityDynamics Product.
        * @access public
        * @since  0.1.0
        * @return void
@@ -478,13 +514,19 @@ namespace UsabilityDynamics\UD_API {
        * @return  void
        */
       public function check_activation_status () {
+        $licenses_link = get_option( $this->token . '-url', '' );
+        //echo "<pre>"; print_r( $this ); echo "</pre>"; die();
         $products = $this->get_detected_products();
         //echo "<pre>"; print_r( $products ); echo "</pre>"; die();
         $messages = array();
         if ( 0 < count( $products ) ) {
           foreach ( $products as $k => $v ) {
             if ( isset( $v['product_status'] ) && 'inactive' == $v['product_status'] ) {
-              $message = sprintf( __( '%s License is not active. To get started, activate it <a href="%s">here</a>.', $this->domain ), $v['product_name'], 'http://example.com' );
+              if( !empty( $licenses_link ) ) {
+                $message = sprintf( __( '%s License is not active. To get started, activate it <a href="%s">here</a>.', $this->domain ), $v['product_name'], $licenses_link );
+              } else {
+                $message = sprintf( __( '%s License is not active.', $this->domain ), $v['product_name'] );
+              }
               if( !empty( $v[ 'errors_callback' ] ) && is_callable( $v[ 'errors_callback' ] ) ) {
                 call_user_func( $v[ 'errors_callback' ], $message );
               } else {
@@ -496,6 +538,20 @@ namespace UsabilityDynamics\UD_API {
         if( !empty( $messages ) ) {
           $this->messages = $messages;
         }
+      }
+      
+      /**
+       * Remove specific plugins notices from licenses page
+       *
+       * @param $notices
+       * @author peshkov@UD
+       */
+      public function maybe_remove_notices( $notices ) {
+        global $current_screen;
+        if( $current_screen->id == $this->hook ) {
+          $notices = array();
+        }
+        return $notices;
       }
       
       /**

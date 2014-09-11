@@ -13,7 +13,7 @@ namespace UsabilityDynamics\UD_API {
      * 
      * @author: peshkov@UD
      */
-    class UI {
+    class UI extends Scaffold {
       
       /**
        * Available Screens
@@ -21,9 +21,16 @@ namespace UsabilityDynamics\UD_API {
       public $available_screens;
       
       /**
+       * Token
+       */
+      public $token;
+      
+      /**
        * Constructor
        */
       public function __construct( $args ) {
+        parent::__construct( $args );
+        $this->token = isset( $args[ 'token' ] ) ? $args[ 'token' ] : array();
         $this->available_screens = isset( $args[ 'screens' ] ) ? $args[ 'screens' ] : array();
       }
       
@@ -34,14 +41,14 @@ namespace UsabilityDynamics\UD_API {
        * @return  void
        */
       public function get_header ( $token = 'ud-license-manager', $screen_icon = 'tools' ) {
-        do_action( 'woothemes_updater_screen_before', $token, $screen_icon );
-        $html = '<div class="wrap woothemes-updater-wrap">' . "\n";
+        do_action( 'ud_licenses_screen_before', $token, $screen_icon );
+        $html = '<div class="wrap ud-licenses-wrap">' . "\n";
         $html .= get_screen_icon( $screen_icon );
         $html .= '<h2 class="nav-tab-wrapper">' . "\n";
         $html .= $this->get_navigation_tabs();
         $html .= '</h2>' . "\n";
         echo $html;
-        do_action( 'woothemes_updater_screen_header_before_content', $token, $screen_icon );
+        do_action( 'ud_licenses_screen_header_before_content', $token, $screen_icon );
       }
 
       /**
@@ -51,10 +58,10 @@ namespace UsabilityDynamics\UD_API {
        * @return  void
        */
       public function get_footer ( $token = 'ud-license-manager', $screen_icon = 'tools' ) {
-        do_action( 'woothemes_updater_screen_footer_after_content', $token, $screen_icon );
-        $html = '</div><!--/.wrap woothemes-updater-wrap-->' . "\n";
+        do_action( 'ud_licenses_screen_footer_after_content', $token, $screen_icon );
+        $html = '</div><!--/.wrap ud-licenses-wrap-->' . "\n";
         echo $html;
-        do_action( 'woothemes_updater_screen_after', $token, $screen_icon );
+        do_action( 'ud_licenses_screen_after', $token, $screen_icon );
       }
 
       /**
@@ -67,6 +74,7 @@ namespace UsabilityDynamics\UD_API {
         $html = '';
 
         $screens = !empty( $this->available_screens ) && is_array( $this->available_screens ) ? $this->available_screens : array();
+        $licenses_url = get_option( $this->token . '-url', '' );
         
         $current_tab = self::get_current_screen();
         if ( 0 < count( $screens ) ) {
@@ -75,13 +83,10 @@ namespace UsabilityDynamics\UD_API {
             if ( $current_tab == $k ) {
               $class .= ' nav-tab-active';
             }
-
-            $url = add_query_arg( 'page', 'woothemes-helper', network_admin_url( 'index.php' ) );
-            $url = add_query_arg( 'screen', $k, $url );
+            $url = add_query_arg( 'screen', $k, $licenses_url );
             $html .= '<a href="' . esc_url( $url ) . '" class="' . esc_attr( $class ) . '">' . esc_html( $v ) . '</a>';
           }
         }
-
         return $html;
       }
 

@@ -40,43 +40,18 @@ namespace UsabilityDynamics\UD_API {
       }
       
       /**
-       * API Key URL
-       */
-      public function create_software_api_url( $args ) {
-        $api_url = add_query_arg( 'wc-api', 'am-software-api', $this->api_url );
-        return $api_url . '&' . http_build_query( $args );
-      }
-
-      /**
        * Activate Product
        */
-      public function activate( $args, $product ) {
-        $defaults = array(
-          'request' 			    => 'activation',
-          'product_id' 		    => '',
-          'instance' 			    => '',
-          'email'             => '',
-          'licence_key'       => '',
-          'software_version' 	=> '',
-          'platform' 			    => $this->blog,
-        );
-        $args = wp_parse_args( $args, $defaults );
+      public function activate( $args, $product = false, $error_log = true ) {
+        $args[ 'request' ] = 'activation';
         return $this->request( $args, $product );
       }
 
       /**
        * Deactivate Product
        */
-      public function deactivate( $args, $product ) {
-        $defaults = array(
-          'request' 		=> 'deactivation',
-          'product_id' 	=> '',
-          'instance' 		=> '',
-          'email'       => '',
-          'licence_key' => '',
-          'platform' 		=> $this->blog,
-        );
-        $args = wp_parse_args( $args, $defaults );
+      public function deactivate( $args, $product = false, $error_log = true ) {
+        $args[ 'request' ] = 'deactivation';
         return $this->request( $args, $product );
       }
 
@@ -85,37 +60,50 @@ namespace UsabilityDynamics\UD_API {
        * @param  array $args
        * @return array
        */
-      public function status( $args, $product ) {
-        $defaults = array(
-          'request' 		=> 'status',
-          'product_id' 	=> '',
-          'instance' 		=> '',
-          'platform' 	  => $this->blog,
-        );
-        $args = wp_parse_args( $args, $defaults );
+      public function status( $args, $product = false, $error_log = false ) {
+        $args[ 'request' ] = 'status';
         return $this->request( $args, $product );
+      }
+      
+      /**
+       * API Key URL
+       */
+      protected function create_software_api_url( $args ) {
+        $api_url = add_query_arg( 'wc-api', 'am-software-api', $this->api_url );
+        return $api_url . '&' . http_build_query( $args );
       }
       
       /**
        *
        * @author peshkov@UD
        */
-      protected function request( $args, $product ) {
-        //** Add nocache hack. We must be sure we do not get CACHE result. peshkov@UD */
-        $args = array_merge( $args, array( 'nocache' => rand( 10000, 99999 ) ) );
+      protected function request( $args, $product, $error_log ) {
+        $product = wp_parse_args( $product, array(
+          'product_name' => __( 'UsabilityDynamics Product', $this->domain ),
+        ) );
+        $args = wp_parse_args( $args, array(
+          'request' 		=> '',
+          'product_id' 	=> '',
+          'instance' 		=> '',
+          'email'       => '',
+          'licence_key' => '',
+          'platform' 	  => $this->blog,
+          //** Add nocache hack. We must be sure we do not get CACHE result. peshkov@UD */
+          'nocache' => rand( 10000, 99999 ),
+        ) );
         $target_url = $this->create_software_api_url( $args );
         //echo "<pre>"; print_r( $target_url ); echo "</pre>"; die();
         $request = wp_remote_get( $target_url );
         if( is_wp_error( $request ) || wp_remote_retrieve_response_code( $request ) != 200 ) {
-          $this->log_request_error( sprintf( __( 'There was an error making %s request for %s. Could not do request to UsabilityDynamics.', $this->domain ), $args[ 'request' ], $product[ 'product_name' ] ) );
+          if( $error_log ) $this->log_request_error( sprintf( __( 'There was an error making %s request for %s. Could not do request to UsabilityDynamics.', $this->domain ), $args[ 'request' ], $product[ 'product_name' ] ) );
         } else {
           $response = wp_remote_retrieve_body( $request );
           $response = @json_decode( $response, true );
           //echo "<pre>"; print_r( $response ); echo "</pre>"; die();
           if( empty( $response ) || !is_array( $response ) ) {
-            $this->log_request_error( sprintf( __( 'There was an error making %s request for %s, please try again', $this->domain ), $args[ 'request' ], $product[ 'product_name' ] ) );
+            if( $error_log ) $this->log_request_error( sprintf( __( 'There was an error making %s request for %s, please try again', $this->domain ), $args[ 'request' ], $product[ 'product_name' ] ) );
           } elseif( !empty( $response[ 'error' ] ) ) {
-            $this->log_request_error( sprintf( __( 'There was an error making %s request for %s: %s.' ), $args[ 'request' ], $product[ 'product_name' ], $response[ 'error' ] ) );
+            if( $error_log ) $this->log_request_error( sprintf( __( 'There was an error making %s request for %s: %s.' ), $args[ 'request' ], $product[ 'product_name' ], $response[ 'error' ] ) );
           } else {
             return $response;
           }

@@ -2,7 +2,7 @@
 
 <div id="col-container" class="<?php //about-wrap ?>">
   <?php
-  echo '<div class="updated">' . wpautop( sprintf( __( 'See below for a list of the UsabilityDynamics Products active on %s. You can %s, as well as our %s on how this works. %s', 'woothemes-updater' ), get_bloginfo( 'name' ), '<a href="'. trailingslashit( $this->api_url ) .'my-account">view your licenses here</a>', '<a href="http://docs.woothemes.com/document/woothemes-helper/?utm_source=helper">documentation</a>', '&nbsp;&nbsp;<a href="' . esc_url( admin_url( 'update-core.php' ) ) . '" class="button">' . __( 'Check for Updates', $this->domain ) . '</a>' ) ) . '</div>' . "\n";
+  echo '<div class="updated">' . wpautop( sprintf( __( 'See below for a list of the UsabilityDynamics Products active on %s. You can %s, as well as our %s on how this works. %s', $this->domain ), get_bloginfo( 'name' ), '<a href="'. trailingslashit( $this->api_url ) .'my-account">view your licenses here</a>', '<a href="https://usabilitydynamics.com/tutorials/licenses/">documentation</a>', '&nbsp;&nbsp;<a href="' . esc_url( admin_url( 'update-core.php' ) ) . '" class="button">' . __( 'Check for Updates', $this->domain ) . '</a>' ) ) . '</div>' . "\n";
   ?>
   <div>
     <form id="activate-products" method="post" action="" class="validate">
