@@ -109,18 +109,19 @@ namespace UsabilityDynamics\UD_API {
         $this->screen_type = !empty( $screen[ 'parent' ] ) ? 'submenu' : 'menu';
         $this->icon_url = !empty( $screen[ 'icon_url' ] ) ? $screen[ 'icon_url' ] : '';
         $this->position = !empty( $screen[ 'position' ] ) ? $screen[ 'position' ] : 66;
-        $this->page_title = !empty( $screen[ 'title' ] ) ? $screen[ 'title' ] : __( 'Licenses', $this->domain );
+        $this->menu_title = !empty( $screen[ 'menu_title' ] ) ? $screen[ 'menu_title' ] : __( 'Licenses', $this->domain );
+        $this->page_title = !empty( $screen[ 'page_title' ] ) ? $screen[ 'page_title' ] : __( 'Licenses', $this->domain );
         $this->menu_slug = $this->plugin . '_' . sanitize_key( $this->page_title );
         
         $licenses_link = '';
         switch( $this->screen_type ) {
           case 'menu':
             global $menu;
-            $this->hook = add_menu_page( $this->page_title, $this->page_title, 'manage_options', $this->menu_slug, array( $this, 'settings_screen' ), $this->icon_url, $this->position );
+            $this->hook = add_menu_page( $this->page_title, $this->menu_title, 'manage_options', $this->menu_slug, array( $this, 'settings_screen' ), $this->icon_url, $this->position );
             break;
           case 'submenu':
             global $submenu;
-            $this->hook = add_submenu_page( $screen[ 'parent' ], $this->page_title, $this->page_title, 'manage_options', $this->menu_slug, array( $this, 'settings_screen' ) );
+            $this->hook = add_submenu_page( $screen[ 'parent' ], $this->page_title, $this->menu_title, 'manage_options', $this->menu_slug, array( $this, 'settings_screen' ) );
             foreach( $submenu[ $screen[ 'parent' ] ] as $sm ) {
               if( $sm[2] == $this->menu_slug ) {
                 $licenses_link = add_query_arg( array(

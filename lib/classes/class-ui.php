@@ -40,15 +40,16 @@ namespace UsabilityDynamics\UD_API {
        * @since   0.1.0
        * @return  void
        */
-      public function get_header ( $token = 'ud-license-manager', $screen_icon = 'tools' ) {
-        do_action( 'ud_licenses_screen_before', $token, $screen_icon );
+      public function get_header ( $token = 'ud-license-manager' ) {
+        global $current_screen;
+        do_action( 'ud_licenses_screen_before', $token );
         $html = '<div class="wrap ud-licenses-wrap">' . "\n";
-        $html .= get_screen_icon( $screen_icon );
+        $html .= '<h2 class="ud-licenses-title">' . get_admin_page_title() . '</h2>' . "\n";
         $html .= '<h2 class="nav-tab-wrapper">' . "\n";
         $html .= $this->get_navigation_tabs();
         $html .= '</h2>' . "\n";
         echo $html;
-        do_action( 'ud_licenses_screen_header_before_content', $token, $screen_icon );
+        do_action( 'ud_licenses_screen_header_before_content', $token );
       }
 
       /**
