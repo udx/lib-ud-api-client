@@ -18,7 +18,7 @@ namespace UsabilityDynamics\UD_API {
       /**
        *
        */
-      public static $version = '0.1.0';
+      public static $version = '1.0.0';
       
       /**
        *
@@ -100,7 +100,7 @@ namespace UsabilityDynamics\UD_API {
        * Register the admin screen.
        *
        * @access public
-       * @since   0.1.0
+       * @since   1.0.0
        * @return   void
        */
       public function register_licenses_screen () {
@@ -147,7 +147,7 @@ namespace UsabilityDynamics\UD_API {
        * Load the main management screen.
        *
        * @access public
-       * @since   0.1.0
+       * @since   1.0.0
        * @return   void
        */
       public function settings_screen () {
@@ -172,7 +172,7 @@ namespace UsabilityDynamics\UD_API {
       
       /**
        * Process the action for the admin screen.
-       * @since  0.1.0
+       * @since  1.0.0
        * @return  void
        */
       public function process_request () {
@@ -226,18 +226,18 @@ namespace UsabilityDynamics\UD_API {
       /**
        * Enqueue admin styles.
        * @access  public
-       * @since   0.1.0
+       * @since   1.0.0
        * @return  void
        */
       public function enqueue_styles () {
-        wp_enqueue_style( 'lib-ud-api-client-admin', esc_url( $this->assets_url . 'css/admin.css' ), array(), '0.1.0', 'all' );
+        wp_enqueue_style( 'lib-ud-api-client-admin', esc_url( $this->assets_url . 'css/admin.css' ), array(), '1.0.0', 'all' );
       }
       
       /**
        * Enqueue admin scripts.
        *
        * @access  public
-       * @since   0.1.0
+       * @since   1.0.0
        * @return  void
        */
       public function enqueue_scripts () {
@@ -248,7 +248,7 @@ namespace UsabilityDynamics\UD_API {
        * Run checks against the API to ensure the product keys are actually active on UsabilityDynamics. If not, deactivate them locally as well.
        *
        * @access public
-       * @since  0.1.0
+       * @since  1.0.0
        * @return void
        */
       public function ensure_keys_are_actually_active () {
@@ -336,7 +336,7 @@ namespace UsabilityDynamics\UD_API {
       /**
        * Deactivate a given product key.
        *
-       * @since    0.1.0
+       * @since    1.0.0
        * @param    string $filename File name of the to deactivate plugin licence
        * @param    bool $local_only Deactivate the product locally without pinging UsabilityDynamics.
        * @return   boolean          Whether or not the deactivation was successful.
@@ -375,7 +375,7 @@ namespace UsabilityDynamics\UD_API {
       /**
        * Load an instance of the updater class for each activated UsabilityDynamics Product.
        * @access public
-       * @since  0.1.0
+       * @since  1.0.0
        * @return void
        */
       public function load_updater_instances () {
@@ -415,7 +415,7 @@ namespace UsabilityDynamics\UD_API {
        * Detect which products have been activated.
        *
        * @access public
-       * @since   0.1.0
+       * @since   1.0.0
        * @return   void
        */
       protected function get_activated_products () {
@@ -429,7 +429,7 @@ namespace UsabilityDynamics\UD_API {
        * Get a list of UsabilityDynamics products ( plugins ) found on this installation.
        *
        * @access public
-       * @since   0.1.0
+       * @since   1.0.0
        * @return   void
        */
       protected function get_detected_products () {
@@ -470,7 +470,7 @@ namespace UsabilityDynamics\UD_API {
        * Get a list of products from UsabilityDynamics.
        *
        * @access public
-       * @since   0.1.0
+       * @since   1.0.0
        * @return   void
        */
       protected function get_product_reference_list () {
@@ -490,7 +490,7 @@ namespace UsabilityDynamics\UD_API {
        * Get an array of products that haven't yet been activated.
        *
        * @access public
-       * @since   0.1.0
+       * @since   1.0.0
        * @return  array Products awaiting activation.
        */
       protected function get_pending_products () {
@@ -513,7 +513,7 @@ namespace UsabilityDynamics\UD_API {
       /**
        * Determine, if there are licenses that are not yet activated.
        * @access  public
-       * @since   0.1.0
+       * @since   1.0.0
        * @return  void
        */
       public function check_activation_status () {

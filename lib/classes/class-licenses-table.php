@@ -28,7 +28,7 @@ namespace UsabilityDynamics\UD_API {
       
       /**
        * Constructor.
-       * @since  0.1.0
+       * @since  1.0.0
        */
       public function __construct ( $args ) {
         global $status, $page;
@@ -54,7 +54,7 @@ namespace UsabilityDynamics\UD_API {
       /**
        * Text to display if no items are present.
        *
-       * @since  0.1.0
+       * @since  1.0.0
        * @return  void
        */
       public function no_items () {
@@ -66,7 +66,7 @@ namespace UsabilityDynamics\UD_API {
        *
        * @param  array $item         The current item in the list.
        * @param  string $column_name The key of the current column.
-       * @since  0.1.0
+       * @since  1.0.0
        * @return string              Output for the current column.
        */
       public function column_default ( $item, $column_name ) {
@@ -81,7 +81,7 @@ namespace UsabilityDynamics\UD_API {
 
       /**
        * Retrieve an array of sortable columns.
-       * @since  0.1.0
+       * @since  1.0.0
        * @return array
        */
       public function get_sortable_columns () {
@@ -91,7 +91,7 @@ namespace UsabilityDynamics\UD_API {
       /**
        * Retrieve an array of columns for the list table.
        *
-       * @since  0.1.0
+       * @since  1.0.0
        * @return array Key => Value pairs.
        */
       public function get_columns () {
@@ -107,7 +107,7 @@ namespace UsabilityDynamics\UD_API {
        * Content for the "product_name" column.
        *
        * @param  array  $item The current item.
-       * @since  0.1.0
+       * @since  1.0.0
        * @return string       The content of this column.
        */
       public function column_product_name ( $item ) {
@@ -117,7 +117,7 @@ namespace UsabilityDynamics\UD_API {
       /**
        * Content for the "product_version" column.
        * @param  array  $item The current item.
-       * @since  0.1.0
+       * @since  1.0.0
        * @return string       The content of this column.
        */
       public function column_product_version ( $item ) {
@@ -128,7 +128,7 @@ namespace UsabilityDynamics\UD_API {
        * Content for the "status" column.
        *
        * @param  array  $item The current item.
-       * @since  0.1.0
+       * @since  1.0.0
        * @return string       The content of this column.
        */
       public function column_product_status ( $item ) {
@@ -152,7 +152,7 @@ namespace UsabilityDynamics\UD_API {
       /**
        * Retrieve an array of possible bulk actions.
        *
-       * @since  0.1.0
+       * @since  1.0.0
        * @return array
        */
       public function get_bulk_actions () {
@@ -162,7 +162,7 @@ namespace UsabilityDynamics\UD_API {
 
       /**
        * Prepare an array of items to be listed.
-       * @since  0.1.0
+       * @since  1.0.0
        * @return array Prepared items.
        */
       public function prepare_items () {

@@ -18,7 +18,7 @@ namespace UsabilityDynamics\UD_API {
       /**
        *
        */
-      public static $version = '0.1.0';
+      public static $version = '1.0.0';
       
       /**
        * URL to access the Update API Manager.
@@ -165,7 +165,7 @@ namespace UsabilityDynamics\UD_API {
        * Check for updates against the remote server.
        *
        * @access public
-       * @since  0.1.0
+       * @since  1.0.0
        * @param  object $transient
        * @return object $transient
        */
@@ -217,7 +217,7 @@ namespace UsabilityDynamics\UD_API {
        * Sends and receives data to and from the server API
        *
        * @access public
-       * @since  0.1.0
+       * @since  1.0.0
        * @return object $response
        */
       public function plugin_information( $args ) {
@@ -239,7 +239,7 @@ namespace UsabilityDynamics\UD_API {
        * Generic request helper.
        *
        * @access public
-       * @since  0.1.0
+       * @since  1.0.0
        * @param  array $args
        * @return object $response or boolean false
        */

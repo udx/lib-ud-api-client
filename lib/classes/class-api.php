@@ -115,7 +115,7 @@ namespace UsabilityDynamics\UD_API {
        * Log an error from an API request.
        *
        * @access private
-       * @since 0.1.0
+       * @since 1.0.0
        * @param string $error
        */
       public function log_request_error ( $error ) {
@@ -124,7 +124,7 @@ namespace UsabilityDynamics\UD_API {
       
       /**
        * Store logged errors in a temporary transient, such that they survive a page load.
-       * @since  0.1.0
+       * @since  1.0.0
        * @return  void
        */
       public function store_error_log () {
@@ -134,7 +134,7 @@ namespace UsabilityDynamics\UD_API {
       /**
        * Get the current error log.
        *
-       * @since  0.1.0
+       * @since  1.0.0
        * @return  void
        */
       public function get_error_log () {
@@ -144,7 +144,7 @@ namespace UsabilityDynamics\UD_API {
       /**
        * Clear the current error log.
        *
-       * @since  0.1.0
+       * @since  1.0.0
        * @return  void
        */
       public function clear_error_log () {

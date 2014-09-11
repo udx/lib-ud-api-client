@@ -37,7 +37,7 @@ namespace UsabilityDynamics\UD_API {
       /**
        * Generate header HTML.
        * @access  public
-       * @since   0.1.0
+       * @since   1.0.0
        * @return  void
        */
       public function get_header ( $token = 'ud-license-manager' ) {
@@ -55,7 +55,7 @@ namespace UsabilityDynamics\UD_API {
       /**
        * Generate footer HTML.
        * @access  public
-       * @since   0.1.0
+       * @since   1.0.0
        * @return  void
        */
       public function get_footer ( $token = 'ud-license-manager', $screen_icon = 'tools' ) {
@@ -68,7 +68,7 @@ namespace UsabilityDynamics\UD_API {
       /**
        * Generate navigation tabs HTML, based on a specific admin menu.
        * @access  public
-       * @since   0.1.0
+       * @since   1.0.0
        * @return  string/WP_Error
        */
       public function get_navigation_tabs () {
@@ -94,7 +94,7 @@ namespace UsabilityDynamics\UD_API {
       /**
        * Return the token for the current screen.
        * @access  public
-       * @since   0.1.0
+       * @since   1.0.0
        * @return  string The token for the current screen.
        */
       public function get_current_screen () {

@@ -18,6 +18,11 @@ namespace UsabilityDynamics\UD_API {
       /**
        *
        */
+      public static $version = '1.0.0';
+    
+      /**
+       *
+       */
       private $products = array();
       
       /**
@@ -25,11 +30,6 @@ namespace UsabilityDynamics\UD_API {
        */
       public $admin;
       
-      /**
-       *
-       */
-      public static $version = '0.1.0';
-
       /**
        *
        */
@@ -51,7 +51,7 @@ namespace UsabilityDynamics\UD_API {
        *
        * Add a product into the array, to be processed with the other products.
        *
-       * @since  0.1.0
+       * @since  1.0.0
        * @param string $file The base file of the product to be activated.
        * @param string $instance_key The unique ID of the product to be activated.
        * @return  void
@@ -75,7 +75,7 @@ namespace UsabilityDynamics\UD_API {
        * Add Product.
        *
        * @access public
-       * @since 0.1.0
+       * @since 1.0.0
        * @return void
        */
       public function load_queued_updates() {
