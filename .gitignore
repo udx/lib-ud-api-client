@@ -2,6 +2,8 @@ temp
 node_modules
 npm-debug.log
 
+wp-test-config.php
+
 .svn
 .idea
 .idea/workspace.xml
