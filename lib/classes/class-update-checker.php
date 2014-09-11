@@ -28,7 +28,12 @@ namespace UsabilityDynamics\UD_API {
       /**
        * same as plugin slug. if a theme use a theme name like 'twentyeleven'
        */
-      private $plugin_name; 
+      private $plugin_name;
+      
+      /**
+       * Path to plugin file
+       */
+      private $plugin_file; 
       
       /**
        * Software Title
@@ -102,6 +107,7 @@ namespace UsabilityDynamics\UD_API {
         //** API data */
         $this->upgrade_url 			  = isset( $args[ 'upgrade_url' ] ) ? $args[ 'upgrade_url' ] : false;
         $this->plugin_name 			  = isset( $args[ 'plugin_name' ] ) ? $args[ 'plugin_name' ] : false;
+        $this->plugin_file 			  = isset( $args[ 'plugin_file' ] ) ? $args[ 'plugin_file' ] : false;
         $this->product_id 			  = isset( $args[ 'product_id' ] ) ? $args[ 'product_id' ] : false;
         $this->api_key 				    = isset( $args[ 'api_key' ] ) ? $args[ 'api_key' ] : false;
         $this->activation_email   = isset( $args[ 'activation_email' ] ) ? $args[ 'activation_email' ] : false;
@@ -167,7 +173,7 @@ namespace UsabilityDynamics\UD_API {
         if ( empty( $transient->checked ) ) {
           return $transient;
         }
-
+        
         $args = array(
           'request' => 'pluginupdatecheck',
           'plugin_name' => $this->plugin_name,
@@ -180,6 +186,8 @@ namespace UsabilityDynamics\UD_API {
           'domain' => $this->blog,
           'software_version' => $this->software_version,
           'extra' => $this->extra,
+          //** Add nocache hack. We must be sure we do not get CACHE result. peshkov@UD */
+          'nocache' => rand( 10000, 99999 ),
         );
 
         //** Check for a plugin update */
@@ -198,10 +206,10 @@ namespace UsabilityDynamics\UD_API {
         //** If there is a new version, modify the transient to reflect an update is available */
         if ( isset( $new_ver ) && isset( $curr_ver ) ) {
           if ( $response !== false && version_compare( $new_ver, $curr_ver, '>' ) ) {
-            $transient->response[$this->plugin_name] = $response;
+            $transient->response[$this->plugin_file] = $response;
           }
         }
-        
+        //echo "<pre>"; print_r( $this ); echo "</pre>"; die();
         return $transient;
       }
 
@@ -215,23 +223,11 @@ namespace UsabilityDynamics\UD_API {
       public function plugin_information( $args ) {
         $target_url = $this->create_upgrade_api_url( $args );
         $request = wp_remote_get( $target_url );
-
-        //$request = wp_remote_post( $this->upgrade_url . 'wc-api/upgrade-api/', array( 'body' => $args ) );
-
         if ( is_wp_error( $request ) || wp_remote_retrieve_response_code( $request ) != 200 ) {
           return false;
         }
-
         $response = unserialize( wp_remote_retrieve_body( $request ) );
-
-        /**
-         * For debugging errors from the API
-         * For errors like: unserialize(): Error at offset 0 of 170 bytes
-         * Comment out $response above first
-         */
-        // $response = wp_remote_retrieve_body( $request );
-        // print_r($response); exit;
-
+        //echo "<pre>"; print_r( $response ); echo "</pre>"; die();
         if ( is_object( $response ) ) {
           return $response;
         } else {
@@ -270,10 +266,10 @@ namespace UsabilityDynamics\UD_API {
           'domain' =>	$this->blog,
           'software_version' => $this->software_version,
           'extra' => $this->extra,
+          //** Add nocache hack. We must be sure we do not get CACHE result. peshkov@UD */
+          'nocache' => rand( 10000, 99999 ),
         );
 
-        
-        
         $response = $this->plugin_information( $args );
 
         //** If everything is okay return the $response */

@@ -44,7 +44,7 @@ namespace UsabilityDynamics\UD_API {
        */
       public function activate( $args, $product = false, $error_log = true ) {
         $args[ 'request' ] = 'activation';
-        return $this->request( $args, $product );
+        return $this->request( $args, $product, $error_log );
       }
 
       /**
@@ -52,7 +52,7 @@ namespace UsabilityDynamics\UD_API {
        */
       public function deactivate( $args, $product = false, $error_log = true ) {
         $args[ 'request' ] = 'deactivation';
-        return $this->request( $args, $product );
+        return $this->request( $args, $product, $error_log );
       }
 
       /**
@@ -62,7 +62,7 @@ namespace UsabilityDynamics\UD_API {
        */
       public function status( $args, $product = false, $error_log = false ) {
         $args[ 'request' ] = 'status';
-        return $this->request( $args, $product );
+        return $this->request( $args, $product, $error_log );
       }
       
       /**

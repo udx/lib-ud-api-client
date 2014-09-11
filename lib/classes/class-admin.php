@@ -392,9 +392,11 @@ namespace UsabilityDynamics\UD_API {
                 $api_key = isset( $data[0] ) ? $data[0] : '';
                 $activation_email = isset( $data[1] ) ? $data[1] : '';
               }
+              //echo "<pre>"; print_r( $v ); echo "</pre>"; die();
               new Update_Checker( array(
                 'upgrade_url' => $this->api_url,
                 'plugin_name' => $v[ 'product_name' ],
+                'plugin_file' => $v[ 'product_file_path' ],
                 'product_id' => $v[ 'product_id' ],
                 'api_key' => $api_key,
                 'activation_email' => $activation_email,
