@@ -113,7 +113,6 @@ namespace UsabilityDynamics\UD_API {
         $this->page_title = !empty( $screen[ 'page_title' ] ) ? $screen[ 'page_title' ] : __( 'Licenses', $this->domain );
         $this->menu_slug = $this->plugin . '_' . sanitize_key( $this->page_title );
         
-        $licenses_link = '';
         switch( $this->screen_type ) {
           case 'menu':
             global $menu;
@@ -122,17 +121,15 @@ namespace UsabilityDynamics\UD_API {
           case 'submenu':
             global $submenu;
             $this->hook = add_submenu_page( $screen[ 'parent' ], $this->page_title, $this->menu_title, 'manage_options', $this->menu_slug, array( $this, 'settings_screen' ) );
-            foreach( $submenu[ $screen[ 'parent' ] ] as $sm ) {
-              if( $sm[2] == $this->menu_slug ) {
-                $licenses_link = add_query_arg( array(
-                  'page' => $this->menu_slug,
-                ), network_admin_url( $screen[ 'parent' ] ) );
-              }
-            }
             break;
         }
         
         //** Set url for licenses page */
+        $licenses_link = isset( $screen[ 'parent' ] ) && ( strpos( $screen[ 'parent' ], '?' ) !== false || strpos( $screen[ 'parent' ], '.php' ) !== false ) ? $screen[ 'parent' ] : 'admin.php';
+        $licenses_link = add_query_arg( array(
+          'page' => $this->menu_slug,
+        ), network_admin_url( $licenses_link ) );
+        
         update_option( $this->token . '-url', $licenses_link );
         
         add_action( 'load-' . $this->hook, array( $this, 'process_request' ) );
