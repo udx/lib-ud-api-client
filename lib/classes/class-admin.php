@@ -135,9 +135,6 @@ namespace UsabilityDynamics\UD_API {
         add_action( 'load-' . $this->hook, array( $this, 'process_request' ) );
         add_action( 'admin_print_styles-' . $this->hook, array( $this, 'enqueue_styles' ) );
         add_action( 'admin_print_scripts-' . $this->hook, array( $this, 'enqueue_scripts' ) );
-        
-        $notices_hook = is_multisite() ? 'network_admin_notices' : 'admin_notices';
-        add_action( $notices_hook, array( $this, 'admin_notices' ) );
       }
       
       /**
@@ -173,6 +170,10 @@ namespace UsabilityDynamics\UD_API {
        * @return  void
        */
       public function process_request () {
+      
+        $notices_hook = is_multisite() ? 'network_admin_notices' : 'admin_notices';
+        add_action( $notices_hook, array( $this, 'admin_notices' ) );
+      
         $supported_actions = array( 'activate-products', 'deactivate-product' );
         if ( !isset( $_REQUEST['action'] ) || !in_array( $_REQUEST['action'], $supported_actions ) || !check_admin_referer( 'bulk-' . 'licenses' ) ) {
           return null;
