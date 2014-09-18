@@ -299,31 +299,31 @@ namespace UsabilityDynamics\UD_API {
 
           } else if ( isset( $response->errors['exp_license'] ) && $response->errors['exp_license'] == 'exp_license' ) {
 
-            $this->errors[] = sprintf( '<div id="message" class="error"><p>' . __( 'The license key for %s has expired. You can reactivate or purchase a license key from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ) . '</p></div>', $plugin_name, $this->renew_license_url );
+            $this->errors[] = sprintf( __( 'The license key for %s has expired. You can reactivate or purchase a license key from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $plugin_name, $this->renew_license_url );
 
           }  else if ( isset( $response->errors['hold_subscription'] ) && $response->errors['hold_subscription'] == 'hold_subscription' ) {
 
-            $this->errors[] = sprintf( '<div id="message" class="error"><p>' . __( 'The subscription for %s is on-hold. You can reactivate the subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ) . '</p></div>', $plugin_name, $this->renew_license_url );
+            $this->errors[] = sprintf( __( 'The subscription for %s is on-hold. You can reactivate the subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $plugin_name, $this->renew_license_url );
 
           } else if ( isset( $response->errors['cancelled_subscription'] ) && $response->errors['cancelled_subscription'] == 'cancelled_subscription' ) {
 
-            $this->errors[] = sprintf( '<div id="message" class="error"><p>' . __( 'The subscription for %s has been cancelled. You can renew the subscription from your account <a href="%s" target="_blank">dashboard</a>. A new license key will be emailed to you after your order has been completed.', $this->text_domain ) . '</p></div>', $plugin_name, $this->renew_license_url );
+            $this->errors[] = sprintf( __( 'The subscription for %s has been cancelled. You can renew the subscription from your account <a href="%s" target="_blank">dashboard</a>. A new license key will be emailed to you after your order has been completed.', $this->text_domain ), $plugin_name, $this->renew_license_url );
 
           } else if ( isset( $response->errors['exp_subscription'] ) && $response->errors['exp_subscription'] == 'exp_subscription' ) {
 
-            $this->errors[] = sprintf( '<div id="message" class="error"><p>' . __( 'The subscription for %s has expired. You can reactivate the subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ) . '</p></div>', $plugin_name, $this->renew_license_url ) ;
+            $this->errors[] = sprintf( __( 'The subscription for %s has expired. You can reactivate the subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $plugin_name, $this->renew_license_url ) ;
 
           } else if ( isset( $response->errors['suspended_subscription'] ) && $response->errors['suspended_subscription'] == 'suspended_subscription' ) {
 
-            $this->errors[] = sprintf( '<div id="message" class="error"><p>' . __( 'The subscription for %s has been suspended. You can reactivate the subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ) . '</p></div>', $plugin_name, $this->renew_license_url ) ;
+            $this->errors[] = sprintf( __( 'The subscription for %s has been suspended. You can reactivate the subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $plugin_name, $this->renew_license_url ) ;
 
           } else if ( isset( $response->errors['pending_subscription'] ) && $response->errors['pending_subscription'] == 'pending_subscription' ) {
 
-            $this->errors[] = sprintf( '<div id="message" class="error"><p>' . __( 'The subscription for %s is still pending. You can check on the status of the subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ) . '</p></div>', $plugin_name, $this->renew_license_url ) ;
+            $this->errors[] = sprintf( __( 'The subscription for %s is still pending. You can check on the status of the subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $plugin_name, $this->renew_license_url ) ;
 
           } else if ( isset( $response->errors['trash_subscription'] ) && $response->errors['trash_subscription'] == 'trash_subscription' ) {
 
-            $this->errors[] = sprintf( '<div id="message" class="error"><p>' . __( 'The subscription for %s has been placed in the trash and will be deleted soon. You can purchase a new subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ) . '</p></div>', $plugin_name, $this->renew_license_url ) ;
+            $this->errors[] = sprintf( __( 'The subscription for %s has been placed in the trash and will be deleted soon. You can purchase a new subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $plugin_name, $this->renew_license_url ) ;
 
           } else if ( isset( $response->errors['no_subscription'] ) && $response->errors['no_subscription'] == 'no_subscription' ) {
 
@@ -331,7 +331,7 @@ namespace UsabilityDynamics\UD_API {
 
           } else if ( isset( $response->errors['no_activation'] ) && $response->errors['no_activation'] == 'no_activation' ) {
 
-            $this->errors[] = sprintf( '<div id="message" class="error"><p>' . __( '%s has not been activated. Go to the settings page and enter the license key and license email to activate %s.', $this->text_domain ) . '</p></div>', $plugin_name, $plugin_name ) ;
+            $this->errors[] = sprintf( __( '%s has not been activated. Go to the settings page and enter the license key and license email to activate %s.', $this->text_domain ), $plugin_name, $plugin_name ) ;
 
           } else if ( isset( $response->errors['no_key'] ) && $response->errors['no_key'] == 'no_key' ) {
 
@@ -339,24 +339,18 @@ namespace UsabilityDynamics\UD_API {
 
           } else if ( isset( $response->errors['download_revoked'] ) && $response->errors['download_revoked'] == 'download_revoked' ) {
 
-            $this->errors[] = sprintf( '<div id="message" class="error"><p>' . __( 'Download permission for %s has been revoked possibly due to a license key or subscription expiring. You can reactivate or purchase a license key from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ) . '</p></div>', $plugin_name, $this->renew_license_url ) ;
+            $this->errors[] = sprintf( __( 'Download permission for %s has been revoked possibly due to a license key or subscription expiring. You can reactivate or purchase a license key from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $plugin_name, $this->renew_license_url ) ;
 
           } else if ( isset( $response->errors['switched_subscription'] ) && $response->errors['switched_subscription'] == 'switched_subscription' ) {
 
-            $this->errors[] = sprintf( '<div id="message" class="error"><p>' . __( 'You changed the subscription for %s, so you will need to enter your new API License Key in the settings page. The License Key should have arrived in your email inbox, if not you can get it by logging into your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ) . '</p></div>', $plugin_name, $this->renew_license_url ) ;
+            $this->errors[] = sprintf( __( 'You changed the subscription for %s, so you will need to enter your new API License Key in the settings page. The License Key should have arrived in your email inbox, if not you can get it by logging into your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $plugin_name, $this->renew_license_url ) ;
 
           }
 
         }
         
         if( !empty( $this->errors ) ) {
-          if( !empty( $this->errors_callback ) && is_callable( $this->errors_callback ) ) {
-            foreach( $this->errors as $error ) {
-              call_user_func( $this->errors_callback, $error );
-            }
-          } else {
-            add_action('admin_notices', array( $this, 'print_errors') );
-          }
+          add_action('admin_notices', array( $this, 'print_errors') );
         }
 
       }
