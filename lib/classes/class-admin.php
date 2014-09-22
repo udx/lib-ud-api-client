@@ -54,8 +54,15 @@ namespace UsabilityDynamics\UD_API {
       /**
        *
        */
+      private $more_products = array();
+      
+      /**
+       *
+       */
       public function __construct( $args = array() ) {
         parent::__construct( $args );
+        
+        //echo "<pre>"; print_r( $args ); echo "</pre>"; die();
         
         //** Set UD API URL. Can be defined custom one in wp-config.php */
         $this->api_url = defined( 'UD_API_URL' ) ? trailingslashit( UD_API_URL ) : 'http://usabilitydynamics.com/';
@@ -72,9 +79,10 @@ namespace UsabilityDynamics\UD_API {
         //** UI */
         $this->ui = new UI( array_merge( $args, array(
           'token' => $this->token,
-          'screens' => array(
+          'screens' => array_filter( array(
             'licenses' => __( 'Licenses', $this->domain ),
-          )
+            'more_products' => !empty( $args[ 'products' ] ) ? __( 'More Products', $this->domain ) : false,
+          ) ),
         ) ) );
         
         $path = dirname( dirname( __DIR__ ) );
@@ -147,14 +155,19 @@ namespace UsabilityDynamics\UD_API {
       public function settings_screen () {
         
         $this->ui->get_header();
-
+        
         $screen = $this->ui->get_current_screen();
+        $this->ensure_keys_are_actually_active();
         
         switch ( $screen ) {
+          //** Products screen. */
+          case 'more_products':
+            $this->more_products = $this->get_more_products();
+            require_once( $this->screens_path . 'screen-more.php' );
+            break;
           //** Licenses screen. */
           case 'license':
           default:
-            $this->ensure_keys_are_actually_active();
             $this->installed_products = $this->get_detected_products();
             $this->pending_products = $this->get_pending_products();
             require_once( $this->screens_path . 'screen-manage.php' );
@@ -462,6 +475,79 @@ namespace UsabilityDynamics\UD_API {
           }
         }
         return $response;
+      }
+      
+      /**
+       * Get a list of UsabilityDynamics plugins or themes which are available for purchasing and downloading.
+       *
+       * @since   1.0.0
+       * @return mixed
+       */
+      protected function get_more_products() {
+        $more_products = array();
+        $trnst = get_transient( $this->token . "-more-a" );
+        //** If we do not have cache ( transient ), do request to get the list of all available products */
+        if( !$trnst || !is_array( $trnst ) ) {
+          $target_url = !empty( $this->args[ 'products' ] ) ? $this->args[ 'products' ] : false;
+          if( !$target_url ) {
+            return $more_products;
+          }
+          $request = wp_remote_get( $target_url );
+          if( is_wp_error( $request ) || wp_remote_retrieve_response_code( $request ) != 200 ) {
+            return $more_products;
+          } else {
+            $response = wp_remote_retrieve_body( $request );
+            $response = @json_decode( $response, true );
+            if( empty( $response ) || !is_array( $response ) ) {
+              return $more_products;
+            } else {
+              $locale = get_locale();
+              $products = !empty( $response[ $locale ][ 'products' ] ) ? 
+                $response[ $locale ][ 'products' ] : ( !empty( $response[ 'en_US' ][ 'products' ] ) ? $response[ 'en_US' ][ 'products' ] : false );
+              if( empty( $products ) || !is_array( $products ) ) {
+                return $more_products;
+              }
+              foreach( $products as $product ) {
+                $product = wp_parse_args( $product, array(
+                  'name' => '',
+                  'description' => '',
+                  'icon' => '',
+                  'url' => '',
+                  'type' => 'plugin',
+                  'product_id' => '',
+                  'referrer' => false,
+                  'order' => 10,
+                ) );
+                if( !empty( $product[ 'referrer' ] ) && $product[ 'referrer' ] == $this->name ) {
+                  $more_products[] = $product;
+                }
+              }
+              //** Sort the list */
+              usort( $more_products, create_function( '$a,$b', 'if ($a[\'order\'] == $b[\'order\']) { return 0; } return ($a[\'order\'] < $b[\'order\']) ? -1 : 1;' ) );
+              //** Set transient for one day */
+              set_transient( $this->token . "-more", $more_products, (60 * 60 * 24) );
+            }
+          }
+        } else {
+          $more_products = $trnst;
+        }
+        
+        //** Determine if plugin from the list is already installed and activated */
+        //** There is not check condition for 'theme' */
+        if( !empty( $more_products ) ) {
+          $reference_list = $this->get_product_reference_list();
+          if( !empty( $reference_list ) && is_array( $reference_list ) ) {
+            foreach( $more_products as $k => $product ) {
+              foreach( $reference_list as $reference ) {
+                if( $reference[ 'product_id' ] == $product[ 'product_id' ] ) {
+                  unset( $more_products[ $k ] );
+                }
+              }
+            }
+          }
+        }
+        //echo "<pre>"; print_r( $more_products ); echo "</pre>"; die();
+        return $more_products;
       }
       
       /**
