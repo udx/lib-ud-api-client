@@ -279,9 +279,14 @@ namespace UsabilityDynamics\UD_API {
               $response = $this->api->status( array(
                 'product_id' 	=> $already_active[ $k ][0],
                 'instance' 		=> $already_active[ $k ][1],
-                'email'       => $activation_email,
-                'licence_key' => $license_key,
+                'email'       => trim($activation_email),
+                'licence_key' => trim($license_key),
               ), false, false );
+              
+              //** Do not deactivate if cannot reach UD */
+              if ( $response === false ) {
+                continue;
+              }
               if( is_array( $response ) && !empty( $response[ 'status_check' ] ) && $response[ 'status_check' ] == 'active' ) {
                 $deactivate = false;
               }
