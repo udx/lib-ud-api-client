@@ -272,8 +272,9 @@ namespace UsabilityDynamics\UD_API {
               //** Get license and activation email  */
               $data = base64_decode( $already_active[ $k ][2] );
               $data = explode( '::', $data );
-              $license_key = isset( $data[0] ) ? $data[0] : '';
-              $activation_email = isset( $data[1] ) ? $data[1] : '';
+              $license_key = isset( $data[0] ) ? trim( $data[0] ) : '';
+              $activation_email = isset( $data[1] ) ? trim( $data[1] ) : '';
+
               //** Do request */
               $response = $this->api->status( array(
                 'product_id' 	=> $already_active[ $k ][0],
@@ -320,8 +321,8 @@ namespace UsabilityDynamics\UD_API {
             'product_id'        => $product_keys[ $k ][ 'product_id' ],
             'instance'          => $product_keys[ $k ][ 'instance_key' ],
             'software_version'  => $product_keys[ $k ][ 'product_version' ],
-            'licence_key'       => $v[ 'license_key' ],
-            'email'             => $v[ 'activation_email' ],
+            'licence_key'       => trim($v[ 'license_key' ]),
+            'email'             => trim($v[ 'activation_email' ]),
           ), $product_keys[ $k ] );
           if ( false !== $activate ) {
             // key: base file, 0: product id, 1: instance_key, 2: hashed license and mail.
