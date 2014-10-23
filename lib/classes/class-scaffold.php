@@ -16,9 +16,10 @@ namespace UsabilityDynamics\UD_API {
      */
     abstract class Scaffold {
       
+      public $type;
       public $blog;
       public $name;
-      public $plugin;
+      public $slug;
       public $domain;
          
       /**
@@ -37,8 +38,9 @@ namespace UsabilityDynamics\UD_API {
        */
       public function __construct( $args = array() ) {
         //** Setup our plugin's data */
+        $this->type = isset( $args[ 'type' ] ) ? trim( $args[ 'type' ] ) : false;
         $this->name = isset( $args[ 'name' ] ) ? trim( $args[ 'name' ] ) : false;
-        $this->plugin = sanitize_key( $this->name );
+        $this->slug = sanitize_key( $this->name );
         $this->domain = isset( $args[ 'domain' ] ) ? trim( $args[ 'domain' ] ) : false;
         
         /**

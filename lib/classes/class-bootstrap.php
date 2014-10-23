@@ -43,7 +43,7 @@ namespace UsabilityDynamics\UD_API {
           add_action( 'plugins_loaded', array( $this, 'load_queued_updates' ), 10 );
         }
         $_ud_license_updater = !is_array( $_ud_license_updater ) ? array() : $_ud_license_updater;
-        $_ud_license_updater[ $this->plugin ] = $this;
+        $_ud_license_updater[ $this->slug ] = $this;
       }
       
       /**
@@ -81,8 +81,8 @@ namespace UsabilityDynamics\UD_API {
       public function load_queued_updates() {
         global $_ud_queued_updates;
         //echo "<pre>"; print_r( $_ud_queued_updates ); echo "</pre>"; die();
-        if ( !empty( $_ud_queued_updates[ $this->plugin ] ) && is_array( $_ud_queued_updates[ $this->plugin ] ) ) {
-          foreach ( $_ud_queued_updates[ $this->plugin ] as $plugin ) {
+        if ( !empty( $_ud_queued_updates[ $this->slug ] ) && is_array( $_ud_queued_updates[ $this->slug ] ) ) {
+          foreach ( $_ud_queued_updates[ $this->slug ] as $plugin ) {
             if ( is_object( $plugin ) && ! empty( $plugin->file ) && ! empty( $plugin->instance_key ) && ! empty( $plugin->product_id ) ) {
               $errors_callback = isset( $plugin->errors_callback ) ? $plugin->errors_callback : false;
               $this->add_product( $plugin->file, $plugin->instance_key, $plugin->product_id, $plugin->errors_callback );

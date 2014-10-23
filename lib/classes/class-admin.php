@@ -68,7 +68,7 @@ namespace UsabilityDynamics\UD_API {
         $this->api_url = defined( 'UD_API_URL' ) ? trailingslashit( UD_API_URL ) : 'http://usabilitydynamics.com/';
         
         //** Don't ever change this, as it will mess with the data stored of which products are activated, etc. */
-        $this->token = 'udl_' . $this->plugin;
+        $this->token = 'udl_' . $this->slug;
         
         //** API */
         $this->api = new API( array_merge( $args, array(
@@ -119,7 +119,7 @@ namespace UsabilityDynamics\UD_API {
         $this->position = !empty( $screen[ 'position' ] ) ? $screen[ 'position' ] : 66;
         $this->menu_title = !empty( $screen[ 'menu_title' ] ) ? $screen[ 'menu_title' ] : __( 'Licenses', $this->domain );
         $this->page_title = !empty( $screen[ 'page_title' ] ) ? $screen[ 'page_title' ] : __( 'Licenses', $this->domain );
-        $this->menu_slug = $this->plugin . '_' . sanitize_key( $this->page_title );
+        $this->menu_slug = $this->slug . '_' . sanitize_key( $this->page_title );
         
         switch( $this->screen_type ) {
           case 'menu':
@@ -267,7 +267,12 @@ namespace UsabilityDynamics\UD_API {
         $products = $this->get_detected_products();
         if ( 0 < count( $already_active ) ) {
           foreach ( $already_active as $k => $v ) {
+            //** Only look through activated plugins */
+            if( !key_exists( $k, $products ) ) {
+              continue;
+            }
             $deactivate = true;
+            
             if ( !empty( $already_active[ $k ][2] ) ) {
               //** Get license and activation email  */
               $data = base64_decode( $already_active[ $k ][2] );
@@ -329,7 +334,7 @@ namespace UsabilityDynamics\UD_API {
             'licence_key'       => trim($v[ 'license_key' ]),
             'email'             => trim($v[ 'activation_email' ]),
           ), $product_keys[ $k ] );
-          if ( false !== $activate ) {
+          if ( false !== $activate && empty( $activate[ 'error' ] ) ) {
             // key: base file, 0: product id, 1: instance_key, 2: hashed license and mail.
             $hash = base64_encode( $v[ 'license_key' ] . '::' . $v[ 'activation_email' ] );
             $already_active[$k] = array( $product_keys[$k]['product_id'], $product_keys[$k]['instance_key'], $hash );
@@ -379,7 +384,7 @@ namespace UsabilityDynamics\UD_API {
             ), $products[ $filename ] );
             $deactivated = ( false !== $deactivated ) ? true : false;
           }
-          if ( $deactivated ) {
+          if ( $deactivated && empty( $deactivated[ 'error' ] ) ) {
             unset( $already_active[ $filename ] );
             $response = update_option( $this->token . '-activated', $already_active );
           } else {
@@ -568,10 +573,10 @@ namespace UsabilityDynamics\UD_API {
         //echo "<pre>"; print_r( $_ud_license_updater ); echo "</pre>"; die();
         $response = array();
         if( 
-          isset( $_ud_license_updater[ $this->plugin ] ) 
-          && is_callable( array( $_ud_license_updater[ $this->plugin ], 'get_products' ) ) 
+          isset( $_ud_license_updater[ $this->slug ] ) 
+          && is_callable( array( $_ud_license_updater[ $this->slug ], 'get_products' ) ) 
         ) {
-          $response = $_ud_license_updater[ $this->plugin ]->get_products();
+          $response = $_ud_license_updater[ $this->slug ]->get_products();
         }
         return $response;
       }

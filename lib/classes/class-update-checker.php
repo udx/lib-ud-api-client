@@ -210,6 +210,7 @@ namespace UsabilityDynamics\UD_API {
           }
         }
         //echo "<pre>"; print_r( $this ); echo "</pre>"; die();
+        //echo "<pre>"; print_r( $transient ); echo "</pre>"; die();
         return $transient;
       }
 
@@ -222,6 +223,7 @@ namespace UsabilityDynamics\UD_API {
        */
       public function plugin_information( $args ) {
         $target_url = $this->create_upgrade_api_url( $args );
+        //echo "<pre>"; print_r( $target_url ); echo "</pre>"; die();
         $request = wp_remote_get( $target_url );
         if ( is_wp_error( $request ) || wp_remote_retrieve_response_code( $request ) != 200 ) {
           return false;
@@ -244,10 +246,11 @@ namespace UsabilityDynamics\UD_API {
        * @return object $response or boolean false
        */
       public function request( $false, $action, $args ) {
+      
         //** Check if this plugins API is about this plugin */
         if ( isset( $args->slug ) ) {
           //** Check if this plugins API is about this plugin */
-          if ( $args->slug != $this->plugin_name ) {
+          if ( sanitize_key( $args->slug ) != sanitize_key( $this->plugin_name ) ) {
             return $false;
           }
         } else {

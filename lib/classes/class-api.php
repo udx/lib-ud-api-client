@@ -93,7 +93,8 @@ namespace UsabilityDynamics\UD_API {
         ) );
         $target_url = $this->create_software_api_url( $args );
         //echo "<pre>"; print_r( $target_url ); echo "</pre>"; die();
-        $request = wp_remote_get( $target_url );
+        $request = wp_remote_get( $target_url, array( 'timeout' => 15 ) );
+        //echo "<pre>"; print_r( $request ); echo "</pre>"; die();
         if( is_wp_error( $request ) || wp_remote_retrieve_response_code( $request ) != 200 ) {
           if( $error_log ) $this->log_request_error( sprintf( __( 'There was an error making %s request for %s. Could not do request to UsabilityDynamics.', $this->domain ), $args[ 'request' ], $product[ 'product_name' ] ) );
         } else {
@@ -104,6 +105,7 @@ namespace UsabilityDynamics\UD_API {
             if( $error_log ) $this->log_request_error( sprintf( __( 'There was an error making %s request for %s, please try again', $this->domain ), $args[ 'request' ], $product[ 'product_name' ] ) );
           } elseif( !empty( $response[ 'error' ] ) ) {
             if( $error_log ) $this->log_request_error( sprintf( __( 'There was an error making %s request for %s: %s.' ), $args[ 'request' ], $product[ 'product_name' ], $response[ 'error' ] ) );
+            return $response;
           } else {
             return $response;
           }

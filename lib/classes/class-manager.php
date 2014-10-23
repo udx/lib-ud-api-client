@@ -15,10 +15,11 @@ namespace UsabilityDynamics\UD_API {
      */
     class Manager {
     
+      private $type;
       private $product_id;
       private $referrer;
-      private $plugin_name;
-      private $plugin_file;
+      private $name;
+      private $boot_file;
       private $instance_key;
       
       public $errors_callback;
@@ -27,51 +28,59 @@ namespace UsabilityDynamics\UD_API {
        * Constructor
        */
       public function __construct( $schema = array() ) {
+        $this->type = !empty( $schema[ 'type' ] ) ? $schema[ 'type' ] : false;
         $this->product_id = !empty( $schema[ 'product_id' ] ) ? $schema[ 'product_id' ] : false;
         $this->referrer = !empty( $schema[ 'referrer' ] ) ? $schema[ 'referrer' ] : false;
-        $this->plugin_name = !empty( $schema[ 'plugin_name' ] ) ? $schema[ 'plugin_name' ] : false;
-        $this->plugin_file = !empty( $schema[ 'plugin_file' ] ) ? $schema[ 'plugin_file' ] : false;
+        $this->name = !empty( $schema[ 'name' ] ) ? $schema[ 'name' ] : false;
+        $this->boot_file = !empty( $schema[ 'boot_file' ] ) ? $schema[ 'boot_file' ] : false;
         $this->errors_callback = !empty( $schema[ 'errors_callback' ] ) ? $schema[ 'errors_callback' ] : false;
         $this->queue_updates();
       }
       
       /**
-       * Add plugin to global list of products.
+       * Add product to global list of products.
        */
       public function queue_updates() {
         global $_ud_queued_updates;
 
-        if( !$this->product_id || !$this->referrer || !$this->plugin_file || !$this->plugin_name ) {
+        if( !$this->product_id || !$this->referrer || !$this->boot_file || !$this->name ) {
           return false;
         }
         
-        $referrer_key = sanitize_key( $this->referrer );
-        $_ud_queued_updates = isset( $_ud_queued_updates ) ? $_ud_queued_updates : array();
-        $_ud_queued_updates[ $referrer_key ] = isset( $_ud_queued_updates[ $referrer_key ] ) ? $_ud_queued_updates[ $referrer_key ] : array();
-        
         //** Get instance key. If it does not exist: generate it. */
-        $option_key = sanitize_key( $this->plugin_name ) . ':instance';
+        $option_key = sanitize_key( $this->name ) . ':instance';
         $this->instance_key = get_option( $option_key, false );
         if( empty( $this->instance_key ) ) {
           $this->instance_key = $this->generate_password( 12, false );
           update_option( $option_key, $this->instance_key );
         }
         
-        $plugin                  = new \stdClass();
-        $plugin->file            = plugin_basename( $this->plugin_file );
-        $plugin->product_id      = $this->product_id;
-        $plugin->instance_key    = $this->instance_key;
-        $plugin->errors_callback = $this->errors_callback;
+        $product                  = new \stdClass();
+        $product->type            = $this->type;
+        $product->file            = plugin_basename( $this->boot_file );
+        $product->product_id      = $this->product_id;
+        $product->instance_key    = $this->instance_key;
+        $product->errors_callback = $this->errors_callback;
 
-        $_ud_queued_updates[ $referrer_key ][] = $plugin;        
+        $_ud_queued_updates = isset( $_ud_queued_updates ) ? $_ud_queued_updates : array();
+        //** Add theme */
+        if( $product->type === 'theme' ) {
+          //** Must be only one theme in the list! */
+          if( !empty( $_ud_queued_updates[ '_theme_' ] ) ) {
+            //** WTF? How it could be? */
+            wp_die( 'Are you cheating?' );
+          } else {
+            $_ud_queued_updates[ '_theme_' ] = $product;
+          }
+        } 
+        //** Add plugin */
+        elseif ( $product->type === 'plugin' ) {
+          $referrer_key = sanitize_key( $this->referrer );
+          $_ud_queued_updates[ $referrer_key ] = isset( $_ud_queued_updates[ $referrer_key ] ) ? $_ud_queued_updates[ $referrer_key ] : array();
+          $_ud_queued_updates[ $referrer_key ][] = $product; 
+        }
+         
         return true;
-      }
-      
-      /**
-       *
-       */
-      public function status() {
-        return 'activated';
       }
       
       /**
