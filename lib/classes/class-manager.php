@@ -43,7 +43,7 @@ namespace UsabilityDynamics\UD_API {
       public function queue_updates() {
         global $_ud_queued_updates;
 
-        if( !$this->product_id || !$this->referrer || !$this->boot_file || !$this->name ) {
+        if( !$this->product_id || !$this->boot_file || !$this->name ) {
           return false;
         }
         
@@ -75,11 +75,14 @@ namespace UsabilityDynamics\UD_API {
         } 
         //** Add plugin */
         elseif ( $product->type === 'plugin' ) {
+          if( !$this->referrer ) {
+            //** WTF? How it could be? */
+            wp_die( 'Are you cheating?' );
+          }
           $referrer_key = sanitize_key( $this->referrer );
           $_ud_queued_updates[ $referrer_key ] = isset( $_ud_queued_updates[ $referrer_key ] ) ? $_ud_queued_updates[ $referrer_key ] : array();
           $_ud_queued_updates[ $referrer_key ][] = $product; 
         }
-         
         return true;
       }
       

@@ -37,10 +37,16 @@ namespace UsabilityDynamics\UD_API {
         global $_ud_license_updater;
         parent::__construct( $args );
         if ( is_admin() ) {
+          //** Maybe get queued theme update */
+          if( $this->type == 'theme' ) {
+            $this->maybe_get_queued_theme_update();
+          } 
+          //** Get queued plugin updates. */
+          elseif ( $this->type == 'plugin' ) {
+            add_action( 'plugins_loaded', array( $this, 'load_queued_updates' ), 10 );
+          }
           //** Load the admin. */
           $this->admin = new Admin( $args );
-          //** Get queued plugin updates. */
-          add_action( 'plugins_loaded', array( $this, 'load_queued_updates' ), 10 );
         }
         $_ud_license_updater = !is_array( $_ud_license_updater ) ? array() : $_ud_license_updater;
         $_ud_license_updater[ $this->slug ] = $this;
@@ -72,7 +78,7 @@ namespace UsabilityDynamics\UD_API {
       }
       
       /**
-       * Add Product.
+       * Add 'Plugin' Product.
        *
        * @access public
        * @since 1.0.0
@@ -85,8 +91,27 @@ namespace UsabilityDynamics\UD_API {
           foreach ( $_ud_queued_updates[ $this->slug ] as $plugin ) {
             if ( is_object( $plugin ) && ! empty( $plugin->file ) && ! empty( $plugin->instance_key ) && ! empty( $plugin->product_id ) ) {
               $errors_callback = isset( $plugin->errors_callback ) ? $plugin->errors_callback : false;
-              $this->add_product( $plugin->file, $plugin->instance_key, $plugin->product_id, $plugin->errors_callback );
+              $this->add_product( $plugin->file, $plugin->instance_key, $plugin->product_id, $errors_callback );
             }
+          }
+        }
+      }
+      
+      /**
+       * Add 'Theme' Product.
+       *
+       * @access public
+       * @since 1.0.0
+       * @return void
+       */
+      public function maybe_get_queued_theme_update() {
+        global $_ud_queued_updates;
+        //echo "<pre>"; print_r( $_ud_queued_updates[ '_theme_' ] ); echo "</pre>"; die();
+        if ( !empty( $_ud_queued_updates[ '_theme_' ] ) && is_object( $_ud_queued_updates[ '_theme_' ] ) ) {
+          $theme = $_ud_queued_updates[ '_theme_' ];
+          if( ! empty( $theme->file ) && ! empty( $theme->instance_key ) && ! empty( $theme->product_id ) ) {
+            $errors_callback = isset( $theme->errors_callback ) ? $theme->errors_callback : false;
+            $this->add_product( $theme->file, $theme->instance_key, $theme->product_id, $errors_callback );
           }
         }
       }

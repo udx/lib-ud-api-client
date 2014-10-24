@@ -76,13 +76,24 @@ namespace UsabilityDynamics\UD_API {
           'token' => $this->token,
         ) ) );
         
+        //** Set available screens */
+        $screens = array();
+        if( $this->type == 'theme' ) {
+          $screens =array_filter( array(
+            'licenses' => __( 'License', $this->domain ),
+            //'more_products' => !empty( $args[ 'products' ] ) ? __( 'More Products', $this->domain ) : false,
+          ) );
+        } elseif ( $this->type == 'plugin' ) {
+          $screens =array_filter( array(
+            'licenses' => __( 'Licenses', $this->domain ),
+            'more_products' => !empty( $args[ 'products' ] ) ? __( 'More Products', $this->domain ) : false,
+          ) );
+        }
+        
         //** UI */
         $this->ui = new UI( array_merge( $args, array(
           'token' => $this->token,
-          'screens' => array_filter( array(
-            'licenses' => __( 'Licenses', $this->domain ),
-            'more_products' => !empty( $args[ 'products' ] ) ? __( 'More Products', $this->domain ) : false,
-          ) ),
+          'screens' => $screens,
         ) ) );
         
         $path = dirname( dirname( __DIR__ ) );
@@ -92,8 +103,13 @@ namespace UsabilityDynamics\UD_API {
         //** Load the updaters. */
         add_action( 'admin_init', array( $this, 'load_updater_instances' ) );
         
-        //** Check Activation Statuses */
-        add_action( 'plugins_loaded', array( $this, 'check_activation_status' ), 11 );
+        if( $this->type == 'plugin' ) {
+          //** Check Activation Statuses */
+          add_action( 'plugins_loaded', array( $this, 'check_activation_status' ), 11 );
+        } 
+        elseif( $this->type == 'theme' ) {
+          $this->check_activation_status();
+        }
         
         //** Add Licenses page */
         $menu_hook = is_multisite() ? 'network_admin_menu' : 'admin_menu';
@@ -166,11 +182,14 @@ namespace UsabilityDynamics\UD_API {
             require_once( $this->screens_path . 'screen-more.php' );
             break;
           //** Licenses screen. */
-          case 'license':
+          case 'licenses':
           default:
             $this->installed_products = $this->get_detected_products();
             $this->pending_products = $this->get_pending_products();
-            require_once( $this->screens_path . 'screen-manage.php' );
+            
+            require_once( $this->screens_path . 'screen-manage-' . $this->type . '.php' );
+            
+            
           break;
         }
 
@@ -448,13 +467,30 @@ namespace UsabilityDynamics\UD_API {
       }
       
       /**
-       * Get a list of UsabilityDynamics products ( plugins ) found on this installation.
+       * Wrapper for get detected theme or plugins.
        *
        * @access public
        * @since   1.0.0
        * @return   void
        */
       protected function get_detected_products () {
+        if ( $this->type == 'theme' ) {
+          return $this->get_detected_theme();
+        } elseif ( $this->type == 'plugin' ) {
+          return $this->get_detected_plugins();
+        } else {
+          return array();
+        }
+      }
+      
+      /**
+       * Get a list of UsabilityDynamics plugins found on this installation.
+       *
+       * @access public
+       * @since   1.0.0
+       * @return   void
+       */
+      protected function get_detected_plugins () {
         //** Check if get_plugins() function exists */
         if ( ! function_exists( 'get_plugins' ) ) {
           require_once ABSPATH . 'wp-admin/includes/plugin.php';
@@ -485,6 +521,40 @@ namespace UsabilityDynamics\UD_API {
             }
           }
         }
+        return $response;
+      }
+      
+      /**
+       * Get detected theme.
+       *
+       * @access public
+       * @since   1.0.0
+       * @return   void
+       */
+      protected function get_detected_theme () {
+        $response = array();
+        $reference_list = $this->get_product_reference_list();
+        $activated_products = $this->get_activated_products();
+        if ( is_array( $reference_list ) && ( 0 < count( $reference_list ) ) ) {
+          $boot_path = wp_normalize_path( get_template_directory() ) . '/style.css';
+          $product = isset( $reference_list[ $boot_path ] ) ? $reference_list[ $boot_path ] : false;
+          if ( $product ) {
+            $status = 'inactive';
+            if ( isset( $activated_products[ $boot_path ] ) ) { 
+              $status = 'active'; 
+            }
+            $response[ $boot_path ] = array( 
+              'product_name' => $this->name, 
+              'product_version' => $this->args[ 'version' ], 
+              'instance_key' => $product['instance_key'], 
+              'product_id' => $product['product_id'],
+              'product_status' => $status, 
+              'product_file_path' => $boot_path,
+              'errors_callback' => isset( $product['errors_callback'] ) ? $product['errors_callback'] : false,
+            );
+          }
+        }
+        //echo "<pre>"; print_r( $response ); echo "</pre>"; die();
         return $response;
       }
       

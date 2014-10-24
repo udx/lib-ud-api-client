@@ -58,7 +58,7 @@ namespace UsabilityDynamics\UD_API {
        * @return  void
        */
       public function no_items () {
-          echo wpautop( sprintf( __( 'No active %s plugins found.', $this->domain ), $this->name ) );
+          echo wpautop( sprintf( __( 'No active %s products found.', $this->domain ), $this->name ) );
       }
 
       /**
