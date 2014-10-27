@@ -23,7 +23,12 @@ namespace UsabilityDynamics\UD_API {
       /**
        * URL to access the Update API Manager.
        */
-      private $upgrade_url; 
+      private $upgrade_url;
+      
+      /**
+       * Changelog
+       */
+      private $changelog;
       
       /**
        * Instance type ( plugin or theme )
@@ -122,6 +127,7 @@ namespace UsabilityDynamics\UD_API {
         $this->software_version 	= isset( $args[ 'software_version' ] ) ? $args[ 'software_version' ] : false;
         $this->text_domain 			  = isset( $args[ 'text_domain' ] ) ? $args[ 'text_domain' ] : false;
         $this->extra 				      = isset( $args[ 'extra' ] ) ? $args[ 'extra' ] : false;
+        $this->changelog 				  = isset( $args[ 'changelog' ] ) ? $args[ 'changelog' ] : false;
         
         /**
          * Some web hosts have security policies that block the : (colon) and // (slashes) in http://,
@@ -229,7 +235,9 @@ namespace UsabilityDynamics\UD_API {
             } else {
               $theme = basename( dirname( $this->file ) );
               $response = (array)$response;
-              if( empty( $response[ 'url' ] ) ) $response[ 'url' ] = 'https://www.usabilitydynamics.com';
+              if( empty( $response[ 'url' ] ) ) { 
+                $response[ 'url' ] = !empty( $this->changelog ) ? $this->changelog : 'https://www.usabilitydynamics.com';
+              }
               $transient->response[$theme] = (array)$response;
             }
             

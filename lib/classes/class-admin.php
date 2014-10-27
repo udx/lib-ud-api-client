@@ -420,6 +420,7 @@ namespace UsabilityDynamics\UD_API {
        * @return void
        */
       public function load_updater_instances () {
+        $args = $this->args;
         $products = $this->get_detected_products();
         $activated_products = $this->get_activated_products();
         if ( 0 < count( $products ) ) {
@@ -448,6 +449,7 @@ namespace UsabilityDynamics\UD_API {
                   'instance' => $v[ 'instance_key' ],
                   'software_version' => $v[ 'product_version' ],
                   'text_domain' => $this->domain,
+                  'changelog' => ( isset( $args[ 'changelog' ] ) ? $args[ 'changelog' ] : false ),
                 ), $v[ 'errors_callback' ] );
               }
             }
