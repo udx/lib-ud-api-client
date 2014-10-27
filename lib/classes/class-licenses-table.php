@@ -139,7 +139,7 @@ namespace UsabilityDynamics\UD_API {
             'filepath' => urlencode( $item['product_file_path'] ),
           ) ), 'bulk-licenses' );
           //$deactivate_url = wp_nonce_url( add_query_arg( 'action', 'deactivate-product', add_query_arg( 'filepath', $item['product_file_path'], add_query_arg( 'page', $this->page, network_admin_url( 'index.php' ) ) ) ), 'bulk-licenses' );
-          $response = '<a href="' . esc_url( $deactivate_url ) . '">' . __( 'Deactivate', $this->domain ) . '</a>' . "\n";
+          $response = '<a href="' . esc_url( $deactivate_url ) . '" onclick="return confirm(\'' . __( 'Are you sure you want to deactivate the license?', $this->domain ) . '\');">' . __( 'Deactivate', $this->domain ) . '</a>' . "\n";
         } else {
           $response .= '<ul>' . "\n";
           $response .= '<li><input name="products[' . esc_attr( $item['product_file_path'] ) . '][license_key]" id="license_key-' . esc_attr( $item['product_file_path'] ) . '" type="text" value="" size="37" aria-required="true" placeholder="' . esc_attr( __( 'Place License Key here', $this->domain ) ) . '" /><li>' . "\n";
