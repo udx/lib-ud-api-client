@@ -434,19 +434,22 @@ namespace UsabilityDynamics\UD_API {
                 $api_key = isset( $data[0] ) ? $data[0] : '';
                 $activation_email = isset( $data[1] ) ? $data[1] : '';
               }
-              //echo "<pre>"; print_r( $v ); echo "</pre>"; die();
-              new Update_Checker( array(
-                'upgrade_url' => $this->api_url,
-                'plugin_name' => $v[ 'product_name' ],
-                'plugin_file' => $v[ 'product_file_path' ],
-                'product_id' => $v[ 'product_id' ],
-                'api_key' => $api_key,
-                'activation_email' => $activation_email,
-                'renew_license_url' => trailingslashit( $this->api_url ) . 'my-account',
-                'instance' => $v[ 'instance_key' ],
-                'software_version' => $v[ 'product_version' ],
-                'text_domain' => $this->domain,
-              ), $v[ 'errors_callback' ] );
+              //echo "<pre>"; print_r( $v ); echo "</pre>"; //die();
+              if( !empty( $api_key ) && !empty( $activation_email ) ) {
+                new Update_Checker( array(
+                  'type' => $this->type,
+                  'upgrade_url' => $this->api_url,
+                  'name' => $v[ 'product_name' ],
+                  'file' => $v[ 'product_file_path' ],
+                  'product_id' => $v[ 'product_id' ],
+                  'api_key' => $api_key,
+                  'activation_email' => $activation_email,
+                  'renew_license_url' => trailingslashit( $this->api_url ) . 'account',
+                  'instance' => $v[ 'instance_key' ],
+                  'software_version' => $v[ 'product_version' ],
+                  'text_domain' => $this->domain,
+                ), $v[ 'errors_callback' ] );
+              }
             }
           }
         }
@@ -752,7 +755,11 @@ namespace UsabilityDynamics\UD_API {
 
             case 'deactivate-product':
               if ( 'true' == $_GET['status'] && empty( $request_errors ) ) {
-                $message = __( 'Product deactivated successfully.', $this->domain );
+                if( $this->type == 'theme' ) {
+                  $message = __( 'Theme deactivated successfully.', $this->domain );
+                } else {
+                  $message = __( 'Product deactivated successfully.', $this->domain );
+                }
               } else {
                 $message = __( 'There was an error while deactivating the product.', $this->domain );
               }
@@ -760,9 +767,17 @@ namespace UsabilityDynamics\UD_API {
 
             default:
               if ( 'true' == $_GET['status'] && empty( $request_errors ) ) {
-                $message = __( 'Products activated successfully.', $this->domain );
+                if( $this->type == 'theme' ) {
+                  $message = __( 'Theme activated successfully.', $this->domain );
+                } else {
+                  $message = __( 'Products activated successfully.', $this->domain );
+                }
               } else {
-                $message = __( 'There was an error and not all products were activated.', $this->domain );
+                if( $this->type == 'theme' ) {
+                  $message = __( 'There was an error and theme was not activated.', $this->domain );
+                } else {
+                  $message = __( 'There was an error and not all products were activated.', $this->domain );
+                }
               }
             break;
           }

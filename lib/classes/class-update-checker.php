@@ -26,14 +26,19 @@ namespace UsabilityDynamics\UD_API {
       private $upgrade_url; 
       
       /**
-       * same as plugin slug. if a theme use a theme name like 'twentyeleven'
+       * Instance type ( plugin or theme )
        */
-      private $plugin_name;
+      private $type;
       
       /**
-       * Path to plugin file
+       * same as plugin slug. if a theme use a theme name like 'twentyeleven'
        */
-      private $plugin_file; 
+      private $name;
+      
+      /**
+       * Path to plugin/theme file
+       */
+      private $file; 
       
       /**
        * Software Title
@@ -106,8 +111,9 @@ namespace UsabilityDynamics\UD_API {
       public function __construct( $args, $errors_callback = false ) {
         //** API data */
         $this->upgrade_url 			  = isset( $args[ 'upgrade_url' ] ) ? $args[ 'upgrade_url' ] : false;
-        $this->plugin_name 			  = isset( $args[ 'plugin_name' ] ) ? $args[ 'plugin_name' ] : false;
-        $this->plugin_file 			  = isset( $args[ 'plugin_file' ] ) ? $args[ 'plugin_file' ] : false;
+        $this->type 			        = isset( $args[ 'type' ] ) ? $args[ 'type' ] : false;
+        $this->name 			        = isset( $args[ 'name' ] ) ? $args[ 'name' ] : false;
+        $this->file 			        = isset( $args[ 'file' ] ) ? $args[ 'file' ] : false;
         $this->product_id 			  = isset( $args[ 'product_id' ] ) ? $args[ 'product_id' ] : false;
         $this->api_key 				    = isset( $args[ 'api_key' ] ) ? $args[ 'api_key' ] : false;
         $this->activation_email   = isset( $args[ 'activation_email' ] ) ? $args[ 'activation_email' ] : false;
@@ -146,10 +152,19 @@ namespace UsabilityDynamics\UD_API {
         /**
          * Plugin Updates
          */
-        //** Check For Plugin Updates */
-        add_filter( 'pre_set_site_transient_update_plugins', array( $this, 'update_check' ) );
-        //** Check For Plugin Information to display on the update details page */
-        add_filter( 'plugins_api', array( $this, 'request' ), 10, 3 );
+        if( $this->type == 'plugin' ) {
+          //** Check For Plugin Updates */
+          add_filter( 'pre_set_site_transient_update_plugins', array( $this, 'update_check' ) );
+          //** Check For Plugin/Theme Information to display on the update details page */
+          add_filter( 'plugins_api', array( $this, 'request' ), 10, 3 );
+        }
+        /**
+         * Theme Updates
+         */
+        elseif ( $this->type == 'theme' ) {
+          add_filter( 'pre_set_site_transient_update_themes', array( $this, 'update_check' ) );
+        }
+        
       }
 
       /**
@@ -170,14 +185,17 @@ namespace UsabilityDynamics\UD_API {
        * @return object $transient
        */
       public function update_check( $transient ) {
+        
+        //** Check if the transient contains the 'checked' information */
+        //** If no, just return its value without hacking it */
         if ( empty( $transient->checked ) ) {
           return $transient;
         }
         
         $args = array(
           'request' => 'pluginupdatecheck',
-          'plugin_name' => $this->plugin_name,
-          //'version' => $transient->checked[$this->plugin_name],
+          'plugin_name' => $this->name,
+          //'version' => $transient->checked[$this->name],
           'version' => $this->software_version,
           'product_id' => $this->product_id,
           'api_key' => $this->api_key,
@@ -200,17 +218,27 @@ namespace UsabilityDynamics\UD_API {
           $new_ver = (string)$response->new_version;
           //** Current installed plugin version */
           $curr_ver = (string)$this->software_version;
-          //$curr_ver = (string)$transient->checked[$this->plugin_name];
+          //$curr_ver = (string)$transient->checked[$this->name];
         }
 
         //** If there is a new version, modify the transient to reflect an update is available */
         if ( isset( $new_ver ) && isset( $curr_ver ) ) {
           if ( $response !== false && version_compare( $new_ver, $curr_ver, '>' ) ) {
-            $transient->response[$this->plugin_file] = $response;
+            if( $this->type == 'plugin' ) {
+              $transient->response[$this->file] = $response;
+            } else {
+              $theme = basename( dirname( $this->file ) );
+              $response = (array)$response;
+              if( empty( $response[ 'url' ] ) ) $response[ 'url' ] = 'https://www.usabilitydynamics.com';
+              $transient->response[$theme] = (array)$response;
+            }
+            
           }
         }
+        
         //echo "<pre>"; print_r( $this ); echo "</pre>"; die();
         //echo "<pre>"; print_r( $transient ); echo "</pre>"; die();
+
         return $transient;
       }
 
@@ -250,7 +278,7 @@ namespace UsabilityDynamics\UD_API {
         //** Check if this plugins API is about this plugin */
         if ( isset( $args->slug ) ) {
           //** Check if this plugins API is about this plugin */
-          if ( sanitize_key( $args->slug ) != sanitize_key( $this->plugin_name ) ) {
+          if ( sanitize_key( $args->slug ) != sanitize_key( $this->name ) ) {
             return $false;
           }
         } else {
@@ -259,8 +287,8 @@ namespace UsabilityDynamics\UD_API {
 
         $args = array(
           'request' => 'plugininformation',
-          'plugin_name' =>	$this->plugin_name,
-          //'version' =>	$version->checked[$this->plugin_name],
+          'plugin_name' =>	$this->name,
+          //'version' =>	$version->checked[$this->name],
           'version' =>	$this->software_version,
           'product_id' =>	$this->product_id,
           'api_key' =>	$this->api_key,
@@ -293,60 +321,60 @@ namespace UsabilityDynamics\UD_API {
         if ( ! empty( $response ) ) {
 
           $plugins = get_plugins();
-          $plugin_name = isset( $plugins[$this->plugin_name] ) ? $plugins[$this->plugin_name]['Name'] : $this->plugin_name;
+          $name = isset( $plugins[$this->name] ) ? $plugins[$this->name]['Name'] : $this->name;
           
           if ( isset( $response->errors['no_key'] ) && $response->errors['no_key'] == 'no_key' && isset( $response->errors['no_subscription'] ) && $response->errors['no_subscription'] == 'no_subscription' ) {
           
-            $this->errors[] = sprintf( __( 'A license key for %s could not be found. Maybe you forgot to enter a license key when setting up %s, or the key was deactivated in your account. You can reactivate or purchase a license key from your account <a href="%s" target="_blank">Licences</a>.', $this->text_domain ), $plugin_name, $plugin_name, $this->renew_license_url );
-            $this->errors[] = sprintf( __( 'A subscription for %s could not be found. You can purchase a subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $plugin_name, $this->renew_license_url );
+            $this->errors[] = sprintf( __( 'A license key for %s could not be found. Maybe you forgot to enter a license key when setting up %s, or the key was deactivated in your account. You can reactivate or purchase a license key from your account <a href="%s" target="_blank">Licences</a>.', $this->text_domain ), $name, $name, $this->renew_license_url );
+            $this->errors[] = sprintf( __( 'A subscription for %s could not be found. You can purchase a subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $name, $this->renew_license_url );
 
           } else if ( isset( $response->errors['exp_license'] ) && $response->errors['exp_license'] == 'exp_license' ) {
 
-            $this->errors[] = sprintf( __( 'The license key for %s has expired. You can reactivate or purchase a license key from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $plugin_name, $this->renew_license_url );
+            $this->errors[] = sprintf( __( 'The license key for %s has expired. You can reactivate or purchase a license key from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $name, $this->renew_license_url );
 
           }  else if ( isset( $response->errors['hold_subscription'] ) && $response->errors['hold_subscription'] == 'hold_subscription' ) {
 
-            $this->errors[] = sprintf( __( 'The subscription for %s is on-hold. You can reactivate the subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $plugin_name, $this->renew_license_url );
+            $this->errors[] = sprintf( __( 'The subscription for %s is on-hold. You can reactivate the subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $name, $this->renew_license_url );
 
           } else if ( isset( $response->errors['cancelled_subscription'] ) && $response->errors['cancelled_subscription'] == 'cancelled_subscription' ) {
 
-            $this->errors[] = sprintf( __( 'The subscription for %s has been cancelled. You can renew the subscription from your account <a href="%s" target="_blank">dashboard</a>. A new license key will be emailed to you after your order has been completed.', $this->text_domain ), $plugin_name, $this->renew_license_url );
+            $this->errors[] = sprintf( __( 'The subscription for %s has been cancelled. You can renew the subscription from your account <a href="%s" target="_blank">dashboard</a>. A new license key will be emailed to you after your order has been completed.', $this->text_domain ), $name, $this->renew_license_url );
 
           } else if ( isset( $response->errors['exp_subscription'] ) && $response->errors['exp_subscription'] == 'exp_subscription' ) {
 
-            $this->errors[] = sprintf( __( 'The subscription for %s has expired. You can reactivate the subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $plugin_name, $this->renew_license_url ) ;
+            $this->errors[] = sprintf( __( 'The subscription for %s has expired. You can reactivate the subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $name, $this->renew_license_url ) ;
 
           } else if ( isset( $response->errors['suspended_subscription'] ) && $response->errors['suspended_subscription'] == 'suspended_subscription' ) {
 
-            $this->errors[] = sprintf( __( 'The subscription for %s has been suspended. You can reactivate the subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $plugin_name, $this->renew_license_url ) ;
+            $this->errors[] = sprintf( __( 'The subscription for %s has been suspended. You can reactivate the subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $name, $this->renew_license_url ) ;
 
           } else if ( isset( $response->errors['pending_subscription'] ) && $response->errors['pending_subscription'] == 'pending_subscription' ) {
 
-            $this->errors[] = sprintf( __( 'The subscription for %s is still pending. You can check on the status of the subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $plugin_name, $this->renew_license_url ) ;
+            $this->errors[] = sprintf( __( 'The subscription for %s is still pending. You can check on the status of the subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $name, $this->renew_license_url ) ;
 
           } else if ( isset( $response->errors['trash_subscription'] ) && $response->errors['trash_subscription'] == 'trash_subscription' ) {
 
-            $this->errors[] = sprintf( __( 'The subscription for %s has been placed in the trash and will be deleted soon. You can purchase a new subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $plugin_name, $this->renew_license_url ) ;
+            $this->errors[] = sprintf( __( 'The subscription for %s has been placed in the trash and will be deleted soon. You can purchase a new subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $name, $this->renew_license_url ) ;
 
           } else if ( isset( $response->errors['no_subscription'] ) && $response->errors['no_subscription'] == 'no_subscription' ) {
 
-            $this->errors[] = sprintf( __( 'A subscription for %s could not be found. You can purchase a subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $plugin_name, $this->renew_license_url );
+            $this->errors[] = sprintf( __( 'A subscription for %s could not be found. You can purchase a subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $name, $this->renew_license_url );
 
           } else if ( isset( $response->errors['no_activation'] ) && $response->errors['no_activation'] == 'no_activation' ) {
 
-            $this->errors[] = sprintf( __( '%s has not been activated. Go to the settings page and enter the license key and license email to activate %s.', $this->text_domain ), $plugin_name, $plugin_name ) ;
+            $this->errors[] = sprintf( __( '%s has not been activated. Go to the settings page and enter the license key and license email to activate %s.', $this->text_domain ), $name, $name ) ;
 
           } else if ( isset( $response->errors['no_key'] ) && $response->errors['no_key'] == 'no_key' ) {
 
-            $this->errors[] = sprintf( __( 'A license key for %s could not be found. Maybe you forgot to enter a license key when setting up %s, or the key was deactivated in your account. You can reactivate or purchase a license key from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $plugin_name, $plugin_name, $this->renew_license_url );
+            $this->errors[] = sprintf( __( 'A license key for %s could not be found. Maybe you forgot to enter a license key when setting up %s, or the key was deactivated in your account. You can reactivate or purchase a license key from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $name, $name, $this->renew_license_url );
 
           } else if ( isset( $response->errors['download_revoked'] ) && $response->errors['download_revoked'] == 'download_revoked' ) {
 
-            $this->errors[] = sprintf( __( 'Download permission for %s has been revoked possibly due to a license key or subscription expiring. You can reactivate or purchase a license key from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $plugin_name, $this->renew_license_url ) ;
+            $this->errors[] = sprintf( __( 'Download permission for %s has been revoked possibly due to a license key or subscription expiring. You can reactivate or purchase a license key from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $name, $this->renew_license_url ) ;
 
           } else if ( isset( $response->errors['switched_subscription'] ) && $response->errors['switched_subscription'] == 'switched_subscription' ) {
 
-            $this->errors[] = sprintf( __( 'You changed the subscription for %s, so you will need to enter your new API License Key in the settings page. The License Key should have arrived in your email inbox, if not you can get it by logging into your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $plugin_name, $this->renew_license_url ) ;
+            $this->errors[] = sprintf( __( 'You changed the subscription for %s, so you will need to enter your new API License Key in the settings page. The License Key should have arrived in your email inbox, if not you can get it by logging into your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $name, $this->renew_license_url ) ;
 
           }
 
