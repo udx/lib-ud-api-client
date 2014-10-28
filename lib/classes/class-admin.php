@@ -108,6 +108,9 @@ namespace UsabilityDynamics\UD_API {
         //** Load the updaters. */
         add_action( 'admin_init', array( $this, 'load_updater_instances' ) );
         
+        //** Ensure keys are actually active on specific screens */
+        add_action( 'current_screen', array( $this, 'current_screen' ) );
+        
         if( $this->type == 'plugin' ) {
           //** Check Activation Statuses */
           add_action( 'plugins_loaded', array( $this, 'check_activation_status' ), 11 );
@@ -164,6 +167,25 @@ namespace UsabilityDynamics\UD_API {
         add_action( 'load-' . $this->hook, array( $this, 'process_request' ) );
         add_action( 'admin_print_styles-' . $this->hook, array( $this, 'enqueue_styles' ) );
         add_action( 'admin_print_scripts-' . $this->hook, array( $this, 'enqueue_scripts' ) );
+      }
+      
+      /**
+       * Ensure licenses keys are actually active on 'Installed Plugins' page
+       *
+       * @access public
+       * @since   1.0.0
+       * @return   void
+       */
+      public function current_screen ( $screen ) {
+        switch( $screen->id ) {
+          case 'plugins':
+            //** Check licenses keys once per 12 hours */
+            if ( false === ( $e = get_transient( $this->token . '_ping' ) ) ) {
+              $this->ensure_keys_are_actually_active();
+              set_transient( $this->token . '_ping', time(), 12 * HOUR_IN_SECONDS );
+            }
+            break;
+        }
       }
       
       /**
