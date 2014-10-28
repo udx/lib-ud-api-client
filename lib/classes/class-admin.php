@@ -96,9 +96,14 @@ namespace UsabilityDynamics\UD_API {
           'screens' => $screens,
         ) ) );
         
-        $path = dirname( dirname( __DIR__ ) );
+        $path = wp_normalize_path( dirname( dirname( __DIR__ ) ) );
         $this->screens_path = trailingslashit( $path . '/static/templates' );
-        $this->assets_url = trailingslashit( plugin_dir_url( $path . '/readme.md' ) . 'static' );
+        if( $this->type == 'theme' ) {
+          $root_path = wp_normalize_path( get_template_directory() );
+          $this->assets_url = trailingslashit( get_template_directory_uri() . str_replace( $root_path, '', $path ) . '/static' );
+        } else {
+          $this->assets_url = trailingslashit( plugin_dir_url( dirname( dirname( __DIR__ ) ) . '/readme.md' ) . 'static' );
+        }
         
         //** Load the updaters. */
         add_action( 'admin_init', array( $this, 'load_updater_instances' ) );
