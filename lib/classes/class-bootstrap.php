@@ -36,20 +36,20 @@ namespace UsabilityDynamics\UD_API {
       public function __construct( $args = array() ) {
         global $_ud_license_updater;
         parent::__construct( $args );
-        if ( is_admin() ) {
-          //** Maybe get queued theme update */
-          if( $this->type == 'theme' ) {
-            $this->maybe_get_queued_theme_update();
-          } 
-          //** Get queued plugin updates. */
-          elseif ( $this->type == 'plugin' ) {
-            add_action( 'plugins_loaded', array( $this, 'load_queued_updates' ), 10 );
-          }
-          //** Load the admin. */
-          $this->admin = new Admin( $args );
+        //** Maybe get queued theme update */
+        if( $this->type == 'theme' ) {
+          $this->maybe_get_queued_theme_update();
+        } 
+        //** Get queued plugin updates. */
+        elseif ( $this->type == 'plugin' ) {
+          add_action( 'plugins_loaded', array( $this, 'load_queued_updates' ), 10 );
         }
         $_ud_license_updater = !is_array( $_ud_license_updater ) ? array() : $_ud_license_updater;
         $_ud_license_updater[ $this->slug ] = $this;
+        //** Load the admin. */
+        if ( is_admin() ) {
+          $this->admin = new Admin( $args );          
+        }
       }
       
       /**
