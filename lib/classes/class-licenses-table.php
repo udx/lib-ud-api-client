@@ -25,6 +25,7 @@ namespace UsabilityDynamics\UD_API {
       public $domain;
       public $page;
       public $per_page = 100;
+      public $activation_email;
       
       /**
        * Constructor.
@@ -36,6 +37,7 @@ namespace UsabilityDynamics\UD_API {
         $this->name = !empty( $args[ 'name' ] ) ? $args[ 'name' ] : '';
         $this->domain = !empty( $args[ 'domain' ] ) ? $args[ 'domain' ] : false;
         $this->page = !empty( $args[ 'page' ] ) ? $args[ 'page' ] : false;
+        $this->activation_email = isset( $args[ 'activation_email' ] ) && $args[ 'activation_email' ] ? true : false;
         
         $args = array(
           'singular'  => 'license',     //singular name of the listed records
@@ -143,8 +145,15 @@ namespace UsabilityDynamics\UD_API {
         } else {
           $response .= '<ul>' . "\n";
           $response .= '<li><input name="products[' . esc_attr( $item['product_file_path'] ) . '][license_key]" id="license_key-' . esc_attr( $item['product_file_path'] ) . '" type="text" value="" size="37" aria-required="true" placeholder="' . esc_attr( __( 'Place License Key here', $this->domain ) ) . '" /><li>' . "\n";
-          $response .= '<li><input name="products[' . esc_attr( $item['product_file_path'] ) . '][activation_email]" id="activation_email-' . esc_attr( $item['product_file_path'] ) . '" type="text" value="" size="37" aria-required="true" placeholder="' . esc_attr( __( 'Place Activation Email here', $this->domain ) ) . '" /></li>' . "\n";
-          $response .= '</ul>' . "\n";
+          
+          if( !$this->activation_email ) {
+            $response .= '</ul>' . "\n";
+            $response .= '<input name="products[' . esc_attr( $item['product_file_path'] ) . '][activation_email]" type="hidden" value="" />' . "\n";
+          } else {
+            $response .= '<li><input name="products[' . esc_attr( $item['product_file_path'] ) . '][activation_email]" id="activation_email-' . esc_attr( $item['product_file_path'] ) . '" type="text" value="" size="37" aria-required="true" placeholder="' . esc_attr( __( 'Place Activation Email here', $this->domain ) ) . '" /></li>' . "\n";
+            $response .= '</ul>' . "\n";
+          }
+          
         }
         return $response;
       }

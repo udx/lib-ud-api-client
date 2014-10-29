@@ -21,7 +21,14 @@ namespace UsabilityDynamics\UD_API {
       public $name;
       public $slug;
       public $domain;
-         
+      
+      /** 
+       * Email is required for activation.
+       *
+       * @var boolean
+       */
+      public $activation_email;
+      
       /**
        * Storage for dynamic properties
        * Used by magic __set, __get
@@ -39,6 +46,7 @@ namespace UsabilityDynamics\UD_API {
       public function __construct( $args = array() ) {
         //** Setup our plugin's data */
         $this->type = isset( $args[ 'type' ] ) ? trim( $args[ 'type' ] ) : false;
+        $this->activation_email = isset( $args[ 'activation_email' ] ) && $args[ 'activation_email' ] ? true : false;
         $this->name = isset( $args[ 'name' ] ) ? trim( $args[ 'name' ] ) : false;
         $this->slug = sanitize_key( $this->name );
         $this->domain = isset( $args[ 'domain' ] ) ? trim( $args[ 'domain' ] ) : false;

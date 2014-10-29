@@ -247,7 +247,7 @@ namespace UsabilityDynamics\UD_API {
             $products = array();
             if ( isset( $_POST[ 'products' ] ) && 0 < count( $_POST[ 'products' ] ) ) {
               foreach ( $_POST[ 'products' ] as $k => $v ) {
-                if ( !empty( $v[ 'license_key' ] ) && !empty( $v[ 'activation_email' ] ) ) {
+                if ( !empty( $v[ 'license_key' ] ) ) {
                   $products[$k] = $v;
                 }
               }
@@ -398,6 +398,7 @@ namespace UsabilityDynamics\UD_API {
         } elseif( $errors ) {
           $response = false;
         }
+        
         return $response;
       }
       
