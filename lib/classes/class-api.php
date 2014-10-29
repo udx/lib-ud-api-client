@@ -104,7 +104,8 @@ namespace UsabilityDynamics\UD_API {
           if( empty( $response ) || !is_array( $response ) ) {
             if( $error_log ) $this->log_request_error( sprintf( __( 'There was an error making %s request for %s, please try again', $this->domain ), $args[ 'request' ], $product[ 'product_name' ] ) );
           } elseif( !empty( $response[ 'error' ] ) ) {
-            if( $error_log ) $this->log_request_error( sprintf( __( 'There was an error making %s request for %s: %s.' ), $args[ 'request' ], $product[ 'product_name' ], $response[ 'error' ] ) );
+            $error = !empty( $response[ 'additional info' ] ) ? $response[ 'additional info' ] : $response[ 'error' ];
+            if( $error_log ) $this->log_request_error( sprintf( __( 'There was an error making %s request for %s: %s' ), $args[ 'request' ], $product[ 'product_name' ], $error ) );
             return $response;
           } else {
             return $response;
