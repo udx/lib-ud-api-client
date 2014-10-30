@@ -429,9 +429,8 @@ namespace UsabilityDynamics\UD_API {
               'email'       => $activation_email,
               'licence_key' => $license_key,
             ), $products[ $filename ] );
-            $deactivated = ( false !== $deactivated ) ? true : false;
           }
-          if ( $deactivated && empty( $deactivated[ 'error' ] ) ) {
+          if ( false !== $deactivated && empty( $deactivated[ 'error' ] ) ) {
             unset( $already_active[ $filename ] );
             $response = update_option( $this->token . '-activated', $already_active );
           } else {
