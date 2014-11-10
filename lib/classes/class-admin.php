@@ -626,6 +626,8 @@ namespace UsabilityDynamics\UD_API {
                   'type' => 'plugin',
                   'product_id' => '',
                   'referrer' => false,
+                  'requires' => false,
+                  'tested' => false,
                   'order' => 10,
                 ) );
                 if( !empty( $product[ 'referrer' ] ) ) {
