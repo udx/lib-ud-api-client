@@ -120,11 +120,12 @@ namespace UsabilityDynamics\UD_API {
         }
         
         //** Add Licenses page */
-        add_action( 'admin_menu', array( $this, 'register_licenses_screen' ), 100 );
+        add_action( 'admin_menu', array( $this, 'r'errors_callback'egister_licenses_screen' ), 100 );
         
         //** Admin Notices Filter */
         add_filter( 'ud:errors:admin_notices', array( $this, 'maybe_remove_notices' ) );
         add_filter( 'ud:messages:admin_notices', array( $this, 'maybe_remove_notices' ) );
+        add_filter( 'ud:warnings:admin_notices', array( $this, 'maybe_remove_notices' ) );
       }
       
       /**
@@ -728,7 +729,7 @@ namespace UsabilityDynamics\UD_API {
                 $message = sprintf( __( '%s License is not active.', $this->domain ), $v['product_name'] );
               }
               if( !empty( $v[ 'errors_callback' ] ) && is_callable( $v[ 'errors_callback' ] ) ) {
-                call_user_func( $v[ 'errors_callback' ], $message );
+                call_user_func_array( $v[ 'errors_callback' ], array( $message, 'warning' ) );
               } else {
                 $messages[] = $message;
               }
