@@ -65,7 +65,7 @@ namespace UsabilityDynamics\UD_API {
         //echo "<pre>"; print_r( $args ); echo "</pre>"; die();
         
         //** Set UD API URL. Can be defined custom one in wp-config.php */
-        $this->api_url = defined( 'UD_API_URL' ) ? trailingslashit( UD_API_URL ) : 'http://usabilitydynamics.com/';
+        $this->api_url = defined( 'UD_API_URL' ) ? trailingslashit( UD_API_URL ) : 'https://www.usabilitydynamics.com/';
         
         //** Don't ever change this, as it will mess with the data stored of which products are activated, etc. */
         $this->token = 'udl_' . $this->slug;
