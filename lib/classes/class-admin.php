@@ -631,7 +631,7 @@ namespace UsabilityDynamics\UD_API {
                 ) );
                 if( !empty( $product[ 'referrer' ] ) ) {
                   $product[ 'referrer' ] = !is_array( $product[ 'referrer' ] ) ? explode( ',', $product[ 'referrer' ] ) : $product[ 'referrer' ];
-                  if( in_array( $this->name, $product[ 'referrer' ] ) ) {
+                  if( in_array( $this->slug, $product[ 'referrer' ] ) ) {
                     $more_products[] = $product;
                   }
                 }
