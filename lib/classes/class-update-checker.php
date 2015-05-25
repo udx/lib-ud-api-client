@@ -259,7 +259,7 @@ namespace UsabilityDynamics\UD_API {
       public function plugin_information( $args ) {
         $target_url = $this->create_upgrade_api_url( $args );
 
-        //** Check licenses keys once per 10 minutes */
+        //** Check licenses keys once per one hour! */
         $response = get_transient( md5( $target_url ) );
         if ( false === $response || empty( $response ) ) {
           //** Add nocache hack. We must be sure we do not get CACHE result. peshkov@UD */
@@ -271,7 +271,7 @@ namespace UsabilityDynamics\UD_API {
           $response = unserialize( wp_remote_retrieve_body( $request ) );
 
           if( is_object( $response ) ) {
-            set_transient( md5( $target_url ), json_encode($response), 10 * MINUTE_IN_SECONDS );
+            set_transient( md5( $target_url ), json_encode($response), HOUR_IN_SECONDS );
           }
         } else {
           $response = json_decode( $response, false );
