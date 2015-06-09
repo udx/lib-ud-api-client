@@ -5,7 +5,7 @@
 [![Scrutinizer](http://img.shields.io/scrutinizer/g/UsabilityDynamics/lib-ud-api-client.svg)](httpshttps://scrutinizer-ci.com/g/UsabilityDynamics/lib-ud-api-client)
 [![Scrutinizer Coverage](http://img.shields.io/scrutinizer/coverage/g/UsabilityDynamics/lib-ud-api-client.svg)](https://scrutinizer-ci.com/g/UsabilityDynamics/lib-ud-api-client)
 
-### API
+### API 
 
 Every API request is being done only for every product separately. So, e.g., if user has installed and activated four products, it does four API requests to UD to determine current status for every product separately.
 
