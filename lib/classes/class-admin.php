@@ -861,8 +861,19 @@ namespace UsabilityDynamics\UD_API {
 
         if ( false === $response || empty( $response ) ) {
 
-          $response = $this->api->legacy_features( apply_filters( 'ud:legacy_features:request:args', array(
+          $detected_products = array();
+
+          foreach( $this->get_detected_plugins() as $product ) {
+            $detected_products[ $product[ 'product_id' ] ] = array(
+              'version' => $product[ 'product_version' ],
+              'status' => $product[ 'product_status' ],
+              'product_id' => $product[ 'product_id' ],
+            );
+          }
+
+          $response = $this->api->upgrade_notice( apply_filters( 'ud:upgrade_notice:request:args', array(
             'product_id' => $this->slug,
+            'detected_products' => base64_decode( json_encode( $detected_products ) ),
           ), $this->slug ) );
 
           if ( false !== $response && empty( $response[ 'error' ] ) ) {
@@ -873,11 +884,9 @@ namespace UsabilityDynamics\UD_API {
           $response = json_decode( $response, true );
         }
 
-        if ( false !== $response && empty( $response[ 'error' ] ) ) {
-          ob_start();
-          require( dirname( dirname( __DIR__ ) ) . '/static/templates/legacy-features.php' );
-          $content = ob_get_clean();
-          echo apply_filters( 'ud::bootstrap::upgrade_notice::legacy_features::template', $content, $this->slug, $response );
+        if ( false !== $response && empty( $response[ 'error' ] ) && !empty( $response[ 'message' ] ) ) {
+          $message = @base64_decode( $response[ 'message' ] );
+          echo apply_filters( 'ud::upgrade_notice::response::admin_notice', $message, $this->slug, $response );
         }
       }
 
@@ -902,14 +911,10 @@ namespace UsabilityDynamics\UD_API {
           exit;
         }
 
-        $cache = true;
         $transient = sanitize_key( 'ud_ping_' . $this->slug );
         $response = get_transient( $transient );
 
-        if ( true || false === $response || empty( $response ) ) {
-
-          $cache = false;
-
+        if ( false === $response || empty( $response ) ) {
 
           $detected_products = array();
 
@@ -948,14 +953,14 @@ namespace UsabilityDynamics\UD_API {
           /**
            * Render Admin Notice from UD server.
            */
-          if( !empty( $response[ 'admin_notice' ] ) ) {
+          if( !empty( $this->ping_response[ 'message' ] ) ) {
             global $_ud_ping_notices;
 
             if( !isset( $_ud_ping_notices ) || !is_array( $_ud_ping_notices ) ) {
               $_ud_ping_notices = array();
             }
 
-            $notice = $this->ping_response[ 'admin_notice' ];
+            $notice = $this->ping_response[ 'message' ];
 
             /** Determine if notice dismissed */
             if( get_transient( md5( $notice ) ) ) {
@@ -966,20 +971,21 @@ namespace UsabilityDynamics\UD_API {
               return;
             }
 
-            array_push( $_ud_ping_notices, $this->ping_response[ 'admin_notice' ] );
+            array_push( $_ud_ping_notices, $this->ping_response[ 'message' ] );
 
             if( !has_action( 'admin_notices', array( __CLASS__, 'ping_admin_notices' ) ) ) {
               add_action( 'admin_notices', array( __CLASS__, 'ping_admin_notices' ) );
-
-              add_filter( 'ud::ping::response::admin_notice::icon', function(){
-                return $this->assets_url . 'images/ud.png';
-              } );
+              add_filter( 'ud::ping::response::admin_notice::icon', array( $this, 'get_admin_notice_icon' ) );
             }
 
           }
 
         }
 
+      }
+
+      public function get_admin_notice_icon() {
+        return $this->assets_url . 'images/ud.png';
       }
 
       /**
