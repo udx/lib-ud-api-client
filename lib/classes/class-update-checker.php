@@ -350,12 +350,12 @@ namespace UsabilityDynamics\UD_API {
           
           if ( isset( $response->errors['no_key'] ) && $response->errors['no_key'] == 'no_key' && isset( $response->errors['no_subscription'] ) && $response->errors['no_subscription'] == 'no_subscription' ) {
           
-            $this->errors[] = sprintf( __( 'A license key for %s could not be found. Maybe you forgot to enter a license key when setting up %s, or the key was deactivated in your account. You can reactivate or purchase a license key from your account <a href="%s" target="_blank">Licences</a>.', $this->text_domain ), $name, $name, $this->renew_license_url );
-            $this->errors[] = sprintf( __( 'A subscription for %s could not be found. You can purchase a subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $name, $this->renew_license_url );
+            $this->errors[] = sprintf( __( 'A license key for %s could not be found. Maybe you forgot to enter a license key when setting up %s, or the key was deactivated in your account. You can reactivate or get a license key from your account <a href="%s" target="_blank">Licences</a>.', $this->text_domain ), $name, $name, $this->renew_license_url );
+            $this->errors[] = sprintf( __( 'A subscription for %s could not be found. You can get a subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $name, $this->renew_license_url );
 
           } else if ( isset( $response->errors['exp_license'] ) && $response->errors['exp_license'] == 'exp_license' ) {
 
-            $this->errors[] = sprintf( __( 'The license key for %s has expired. You can reactivate or purchase a license key from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $name, $this->renew_license_url );
+            $this->errors[] = sprintf( __( 'The license key for %s has expired. You can reactivate or get a license key from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $name, $this->renew_license_url );
 
           }  else if ( isset( $response->errors['hold_subscription'] ) && $response->errors['hold_subscription'] == 'hold_subscription' ) {
 
@@ -379,11 +379,11 @@ namespace UsabilityDynamics\UD_API {
 
           } else if ( isset( $response->errors['trash_subscription'] ) && $response->errors['trash_subscription'] == 'trash_subscription' ) {
 
-            $this->errors[] = sprintf( __( 'The subscription for %s has been placed in the trash and will be deleted soon. You can purchase a new subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $name, $this->renew_license_url ) ;
+            $this->errors[] = sprintf( __( 'The subscription for %s has been placed in the trash and will be deleted soon. You can get a new subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $name, $this->renew_license_url ) ;
 
           } else if ( isset( $response->errors['no_subscription'] ) && $response->errors['no_subscription'] == 'no_subscription' ) {
 
-            $this->errors[] = sprintf( __( 'A subscription for %s could not be found. You can purchase a subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $name, $this->renew_license_url );
+            $this->errors[] = sprintf( __( 'A subscription for %s could not be found. You can get a subscription from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $name, $this->renew_license_url );
 
           } else if ( isset( $response->errors['no_activation'] ) && $response->errors['no_activation'] == 'no_activation' ) {
 
@@ -391,11 +391,11 @@ namespace UsabilityDynamics\UD_API {
 
           } else if ( isset( $response->errors['no_key'] ) && $response->errors['no_key'] == 'no_key' ) {
 
-            $this->errors[] = sprintf( __( 'A license key for %s could not be found. Maybe you forgot to enter a license key when setting up %s, or the key was deactivated in your account. You can reactivate or purchase a license key from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $name, $name, $this->renew_license_url );
+            $this->errors[] = sprintf( __( 'A license key for %s could not be found. Maybe you forgot to enter a license key when setting up %s, or the key was deactivated in your account. You can reactivate or get a license key from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $name, $name, $this->renew_license_url );
 
           } else if ( isset( $response->errors['download_revoked'] ) && $response->errors['download_revoked'] == 'download_revoked' ) {
 
-            $this->errors[] = sprintf( __( 'Download permission for %s has been revoked possibly due to a license key or subscription expiring. You can reactivate or purchase a license key from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $name, $this->renew_license_url ) ;
+            $this->errors[] = sprintf( __( 'Download permission for %s has been revoked possibly due to a license key or subscription expiring. You can reactivate or get a license key from your account <a href="%s" target="_blank">dashboard</a>.', $this->text_domain ), $name, $this->renew_license_url ) ;
 
           } else if ( isset( $response->errors['switched_subscription'] ) && $response->errors['switched_subscription'] == 'switched_subscription' ) {
 
