@@ -641,7 +641,12 @@ namespace UsabilityDynamics\UD_API {
                 }
               }
               //** Sort the list */
-              usort( $more_products, create_function( '$a,$b', 'if ($a[\'order\'] == $b[\'order\']) { return 0; } return ($a[\'order\'] < $b[\'order\']) ? -1 : 1;' ) );
+              usort($more_products, function( $a,$b ) {
+                if ( $a['order'] == $b['order'] ) {
+                  return 0;
+                }
+                return ( $a['order'] < $b['order'] ) ? -1 : 1;
+              });
               //** Set transient for one day */
               set_transient( $this->token . "-more", $more_products, (60 * 60 * 24) );
             }
