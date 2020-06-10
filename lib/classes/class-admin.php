@@ -64,13 +64,7 @@ namespace UsabilityDynamics\UD_API {
       /**
        *
        */
-      private $addons = array ();
-
-      /**
-       *
-       */
       public function __construct( $args = array() ) {
-
         parent::__construct( $args );
 
         //echo "<pre>"; print_r( $args ); echo "</pre>"; die();
@@ -130,21 +124,8 @@ namespace UsabilityDynamics\UD_API {
           $this->check_activation_status();
         }
 
-
-        if ( isset($args['addons']) && !empty($args['addons']) ) {
-          $this->addons = $args['addons'];
-          //no need to show it
-          $screens = array();
-
-          $this->init_addons();
-
-          //** Add Add-ons page */
-          add_action( 'admin_menu', array( $this, 'register_addons_screen' ), 999 );
-
-        } else {
-          //** Add Licenses page */
-          add_action( 'admin_menu', array( $this, 'register_licenses_screen' ), 999 );
-        }
+        //** Add Licenses page */
+        add_action( 'admin_menu', array( $this, 'register_licenses_screen' ), 999 );
 
         //** Admin Notices Filter */
         add_filter( 'ud:errors:admin_notices', array( $this, 'maybe_remove_notices' ) );
@@ -157,20 +138,6 @@ namespace UsabilityDynamics\UD_API {
          */
         add_action( 'ud::bootstrap::upgrade_notice::additional_info', array( $this, 'maybe_add_info_to_upgrade_notice' ), 10, 2 );
 
-      }
-
-      /**
-       * Init active addons
-       */
-      public function init_addons () {
-        $active_addons = get_option('wpp_active_addons', array());
-        if ( !empty($active_addons) ) {
-          foreach( $this->addons as $addon ) {
-            if ( in_array($addon['slug'], $active_addons) && file_exists(WPP_Path . '/' . $addon['path'])) {
-              require_once ( WPP_Path . '/' . $addon['path'] );
-            }
-          }
-        }
       }
 
       /**
@@ -188,47 +155,6 @@ namespace UsabilityDynamics\UD_API {
         $this->position = !empty( $screen[ 'position' ] ) ? $screen[ 'position' ] : 66;
         $this->menu_title = !empty( $screen[ 'menu_title' ] ) ? $screen[ 'menu_title' ] : __( 'Licenses', $this->domain );
         $this->page_title = !empty( $screen[ 'page_title' ] ) ? $screen[ 'page_title' ] : __( 'Licenses', $this->domain );
-        $this->menu_slug = $this->slug . '_' . sanitize_key( $this->page_title );
-
-        switch( $this->screen_type ) {
-          case 'menu':
-            global $menu;
-            $this->hook = add_menu_page( $this->page_title, $this->menu_title, 'manage_options', $this->menu_slug, array( $this, 'settings_screen' ), $this->icon_url, $this->position );
-            break;
-          case 'submenu':
-            global $submenu;
-            $this->hook = add_submenu_page( $screen[ 'parent' ], $this->page_title, $this->menu_title, 'manage_options', $this->menu_slug, array( $this, 'settings_screen' ) );
-            break;
-        }
-
-        //** Set url for licenses page */
-        $licenses_link = isset( $screen[ 'parent' ] ) && ( strpos( $screen[ 'parent' ], '?' ) !== false || strpos( $screen[ 'parent' ], '.php' ) !== false ) ? $screen[ 'parent' ] : 'admin.php';
-        $licenses_link = add_query_arg( array(
-          'page' => $this->menu_slug,
-        ), admin_url( $licenses_link ) );
-
-        update_option( $this->token . '-url', $licenses_link );
-
-        add_action( 'load-' . $this->hook, array( $this, 'process_request' ) );
-        add_action( 'admin_print_styles-' . $this->hook, array( $this, 'enqueue_styles' ) );
-        add_action( 'admin_print_scripts-' . $this->hook, array( $this, 'enqueue_scripts' ) );
-      }
-
-      /**
-       * Register the admin screen.
-       *
-       * @access public
-       * @since   1.0.0
-       * @return   void
-       */
-      public function register_addons_screen () {
-        $args = $this->args;
-        $screen = !empty( $args[ 'screen' ] ) ? $args[ 'screen' ] : false;
-        $this->screen_type = !empty( $screen[ 'parent' ] ) ? 'submenu' : 'menu';
-        $this->icon_url = !empty( $screen[ 'icon_url' ] ) ? $screen[ 'icon_url' ] : '';
-        $this->position = !empty( $screen[ 'position' ] ) ? $screen[ 'position' ] : 66;
-        $this->menu_title = !empty( $screen[ 'menu_title' ] ) ? $screen[ 'menu_title' ] : __( 'Add-ons', $this->domain );
-        $this->page_title = !empty( $screen[ 'page_title' ] ) ? $screen[ 'page_title' ] : __( 'Add-ons', $this->domain );
         $this->menu_slug = $this->slug . '_' . sanitize_key( $this->page_title );
 
         switch( $this->screen_type ) {
@@ -283,12 +209,9 @@ namespace UsabilityDynamics\UD_API {
        */
       public function settings_screen () {
 
-        if ( !empty($this->addons) ) {
-          $screen = 'addons';
-        } else {
-          $this->ui->get_header();
-          $screen = $this->ui->get_current_screen();
-        }
+        $this->ui->get_header();
+
+        $screen = $this->ui->get_current_screen();
 
         switch ( $screen ) {
           //** Products screen. */
@@ -296,17 +219,14 @@ namespace UsabilityDynamics\UD_API {
             $this->more_products = $this->get_more_products();
             require_once( $this->screens_path . 'screen-more.php' );
             break;
-          //** Addons screen. */
-          case 'addons':
-            require_once( $this->screens_path . 'screen-manage-addons.php' );
-            break;
+          //** Licenses screen. */
           case 'licenses':
           default:
             $this->ensure_keys_are_actually_active();
             $this->installed_products = $this->get_detected_products();
             $this->pending_products = $this->get_pending_products();
             require_once( $this->screens_path . 'screen-manage-' . $this->type . '.php' );
-            break;
+          break;
         }
 
         $this->ui->get_footer();
@@ -321,8 +241,8 @@ namespace UsabilityDynamics\UD_API {
 
         add_action( 'admin_notices', array( $this, 'admin_notices' ) );
 
-        $supported_actions = array( 'activate-addons', 'activate-products', 'deactivate-product' );
-        if ( !isset( $_REQUEST['action'] ) || !in_array( $_REQUEST['action'], $supported_actions ) ) {
+        $supported_actions = array( 'activate-products', 'deactivate-product' );
+        if ( !isset( $_REQUEST['action'] ) || !in_array( $_REQUEST['action'], $supported_actions ) || !check_admin_referer( 'bulk-' . 'licenses' ) ) {
           return null;
         }
 
@@ -331,21 +251,6 @@ namespace UsabilityDynamics\UD_API {
         $type = $_REQUEST['action'];
 
         switch ( $type ) {
-          case 'activate-addons':
-            $products = array();
-            if ( isset( $_POST[ 'products' ] ) && 0 < count( $_POST[ 'products' ] ) ) {
-              foreach ( $_POST[ 'products' ] as $k => $v ) {
-                if ( $v == '1' ) {
-                  $products[] = $k;
-                }
-              }
-            }
-            if ( 0 < count( $products ) ) {
-              update_option( 'wpp_active_addons', $products );
-            }
-            $response = true;
-            break;
-
           case 'activate-products':
             $products = array();
             if ( isset( $_POST[ 'products' ] ) && 0 < count( $_POST[ 'products' ] ) ) {
@@ -362,16 +267,16 @@ namespace UsabilityDynamics\UD_API {
               $response = false;
               $type = 'no-license-keys';
             }
-            break;
+          break;
 
           case 'deactivate-product':
             if ( isset( $_GET['filepath'] ) && ( '' != $_GET['filepath'] ) ) {
               $response = $this->deactivate_product( $_GET['filepath'] );
             }
-            break;
+          break;
 
           default:
-            break;
+          break;
         }
 
         if ( $response == true ) {
@@ -694,53 +599,6 @@ namespace UsabilityDynamics\UD_API {
       }
 
       /**
-       * Get detected addons.
-       *
-       * @access public
-       * @since   1.0.0
-       * @return   void
-       */
-      protected function get_detected_addons () {
-
-        if ( is_array( $this->addons ) && ( 0 < count( $this->addons ) ) ) {
-          $active_addons = get_option('wpp_active_addons', array());
-          $plugins = $this->get_detected_plugins();
-          if ( !empty($plugins)) {
-            foreach( $plugins as $plugin ) {
-              $products[$plugin['product_id']]['status'] = is_plugin_active($plugin['product_file_path']);
-              $products[$plugin['product_id']]['file_path'] = $plugin['product_file_path'];
-            }
-          }
-          foreach( $this->addons as $k=>$addon ) {
-            if ( in_array($addon['slug'], $active_addons)) {
-              $this->addons[$k]['active'] = 1;
-            }
-            if ( isset($products[$addon['product_id']]) && $products[$addon['product_id']]['status'] == true) {
-              $this->addons[$k]['plugin_active'] = 1;
-              $this->addons[$k]['plugin_deactivate_link'] = $this->get_deactivation_link($products[$addon['product_id']]['file_path']);
-            }
-          }
-        }
-
-        return $this->addons;
-      }
-
-      /**
-       * Get plugin deactivation link
-       * @param $plugin
-       * @return string
-       */
-      function get_deactivation_link( $plugin ) {
-        if( strpos( $plugin, '/' ) ) {
-          $plugin = str_replace( '\/', '%2F', $plugin );
-        }
-        $url = sprintf( admin_url( 'plugins.php?action=deactivate&plugin=%s&plugin_status=all&paged=1&s' ), $plugin );
-        $_REQUEST[ 'plugin' ] = $plugin;
-        $url = wp_nonce_url( $url, 'deactivate-plugin_' . $plugin );
-        return $url;
-      }
-
-      /**
        * Get a list of UsabilityDynamics plugins or themes which are available for purchasing and downloading.
        *
        * @since   1.0.0
@@ -948,15 +806,7 @@ namespace UsabilityDynamics\UD_API {
           switch ( $_GET['type'] ) {
             case 'no-license-keys':
               $message = __( 'No license keys were specified for activation.', $this->domain );
-              break;
-
-            case 'activate-addons':
-              if ( 'true' == $_GET['status'] && empty( $request_errors ) ) {
-                $message = __( 'Add-ons activated successfully.', $this->domain );
-              } else {
-                $message = __( 'There was an error and not all add-ons were activated.', $this->domain );
-              }
-              break;
+            break;
 
             case 'deactivate-product':
               if ( 'true' == $_GET['status'] && empty( $request_errors ) ) {
@@ -968,7 +818,7 @@ namespace UsabilityDynamics\UD_API {
               } else {
                 $message = __( 'There was an error while deactivating the product.', $this->domain );
               }
-              break;
+            break;
 
             default:
               if ( 'true' == $_GET['status'] && empty( $request_errors ) ) {
@@ -984,7 +834,7 @@ namespace UsabilityDynamics\UD_API {
                   $message = __( 'There was an error and not all products were activated.', $this->domain );
                 }
               }
-              break;
+            break;
           }
 
           $response = '<div class="' . esc_attr( $classes[$_GET['status']] ) . ' fade">' . "\n";
