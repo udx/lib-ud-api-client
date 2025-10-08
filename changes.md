@@ -1,4 +1,9 @@
+### 1.2.5
+
+* Fix text domain initialization to prevent PHP notices.
+
 ### 1.2.4
+
 * Require user to be logged in while dismissing Admin Panel notices.
 
 ### 1.2.3
